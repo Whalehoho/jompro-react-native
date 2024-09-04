@@ -38,6 +38,21 @@ OR
 
 npm run android-release
 
+Create Development build
+========================
+
+npm install expo-dev-client
+eas build --profile development --platform android
+adb install path/to/your-development-build.apk
+
+Get debug keystore SHA1
+======================
+.\gradlew signingReport
+
+eas credentials -p android
+
+
+
 Ngrok
 =====
 ngrok http http://localhost:8180

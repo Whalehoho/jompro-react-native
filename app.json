@@ -26,9 +26,16 @@
       "permissions": [
         "android.permission.CAMERA",
         "INTERNET",
-        "ACCESS_NETWORK_STATE"
+        "ACCESS_NETWORK_STATE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
       ],
-      "package": "com.kc.jompro"
+      "package": "com.kc.jompro",
+      "config": {
+        "googleMaps": {
+          "apiKey": ""
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -56,7 +63,9 @@
       },
       "eas": {
         "projectId": "67f67a60-8ab9-4dfc-914e-c30b02711025"
-      }
+      },
+      "googleMapsApiKey": "",
+      "imgbbApiKey": "5f4732dd10b115c92d3c08ff2e9761b9"
     }
   }
 }

@@ -34,7 +34,7 @@ export const updateProfileImage = async (userData) => {
 
 export const updateProfile = async (userData) => {
   try {
-    const response = await apiClient.put('/user/updateProfile', userData);
+    const response = await apiClient.put('/user/updateProfile', userData, { timeout: 10000 });
     return response.data;
   } catch (error) {
     console.error('Error updating user:', error);
