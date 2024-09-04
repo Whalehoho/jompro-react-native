@@ -12,8 +12,8 @@ const { googleMapsApiKey } = Constants.expoConfig.extra;
 const initialRegion = {
   latitude: 3.06384,
   longitude: 101.69694,
-  latitudeDelta: 0.0922,
-  longitudeDelta: 0.0421,
+  latitudeDelta: 0.09,
+  longitudeDelta: 0.09,
 };
 
 const Discover = () => {
@@ -48,32 +48,38 @@ const Discover = () => {
     const newRegion = {
       latitude: lat,
       longitude: lng,
-      latitudeDelta: 0.0922,
-      longitudeDelta: 0.0421,
+      latitudeDelta: 0.09,
+      longitudeDelta: 0.09,
     };
     setRegion(newRegion);
     setSelectedLocation({ latitude: lat, longitude: lng });
   };
 
+  const clearSearch = () => {
+    if (searchRef.current) {
+      searchRef.current.clear();
+      searchRef.current.blur();
+    }
+    setSelectedLocation(null);
+  }
+
   return (
     <View style={styles.container}>
       <GooglePlacesAutocomplete 
         ref={searchRef}
-        placeholder='Search for places'
+        placeholder='Search with address or city ...'
         onPress={(data, details = null) => handleLocationSelect(data, details)}
         query={{
           key: googleMapsApiKey,
           language: 'en',
+          // types: '(cities)',
         }}
         fetchDetails={true}
         styles={styles.SearchBar}
       />
       <TouchableOpacity
         style={styles.clearButton}
-        onPress={() => {
-          searchRef.current?.clear();
-          setSelectedLocation(null);
-        }}
+        onPress={clearSearch}
       >
         <Text style={styles.clearButtonText}>✖</Text>
       </TouchableOpacity>
@@ -106,31 +112,44 @@ const styles = StyleSheet.create({
   SearchBar: {
     container: {
       position: 'absolute',
-      top: 10,
+      top: '90%',
       left: 10,
       right: 10,
-      width: '80%',
+      width: 'auto',
       zIndex: 2,
+      backgroundColor: 'transparent',
+      borderRadius: 25,
     },
     listView: {
-      backgroundColor: 'white',
-      zIndex: 1,
+      position: 'absolute',
+      bottom: 60,              
+      zIndex: 2,
+      borderRadius: 25,
     },
+    // row: {
+    //   backgroundColor: 'rgba(254, 204, 29, 0.7)', 
+    //   padding: 10,
+    //   borderBottomColor: 'transparent',
+    //   borderBottomWidth: 1,
+    // },
     textInputContainer: {
-      backgroundColor: 'white',
-      borderRadius: 5,
-      paddingRight: 30,
+      backgroundColor: 'transparent',
+      borderRadius: 25,
+      borderWidth: 1,
+      borderColor: '#5e40b7',
     },
     textInput: {
-      height: 44,
+      height: '100%',
+      backgroundColor: 'rgba(254, 204, 29, 0.7)',
       color: '#5d5d5d',
       fontSize: 16,
+      borderRadius: 25,
     },
   },
   clearButton: {
     position: 'absolute',
-    top: 10,
-    right: 70, 
+    top: '90%',
+    right: 15, 
     backgroundColor: 'transparent',
     padding: 10,
     borderRadius: 5,
