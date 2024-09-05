@@ -23,6 +23,14 @@ const ProfileLayout = () => {
             headerShadowVisible: true,
           }} 
         />
+        <Stack.Screen 
+          name="saved-addresses" 
+          options={{
+            headerShown: true,
+            headerTitle: () => <CustomHeaderTitle title="Saved Addresses" />,
+            headerShadowVisible: true,
+          }} 
+        />
         <Stack.Screen
           name="liveness-verification"
           options={{ headerShown: false}}

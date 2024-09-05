@@ -4,17 +4,21 @@ import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { SearchBar } from 'react-native-screens';
 
 import Constants from 'expo-constants';
 const { googleMapsApiKey } = Constants.expoConfig.extra;
 
+const MIN_LATITUDE_DELTA = 0.04;
+const MIN_LONGITUDE_DELTA = 0.04;
+
 const initialRegion = {
   latitude: 3.06384,
   longitude: 101.69694,
-  latitudeDelta: 0.09,
-  longitudeDelta: 0.09,
+  latitudeDelta: MIN_LATITUDE_DELTA,
+  longitudeDelta: MIN_LONGITUDE_DELTA
 };
+
+
 
 const Discover = () => {
   const [locationPermission, setLocationPermission] = useState(false);
@@ -48,11 +52,20 @@ const Discover = () => {
     const newRegion = {
       latitude: lat,
       longitude: lng,
-      latitudeDelta: 0.09,
-      longitudeDelta: 0.09,
+      latitudeDelta: MIN_LATITUDE_DELTA,
+      longitudeDelta: MIN_LONGITUDE_DELTA
     };
     setRegion(newRegion);
     setSelectedLocation({ latitude: lat, longitude: lng });
+
+    const addressComponents = details.address_components;
+
+    const sublocality_level_1 = addressComponents.find(component =>
+      component.types.includes('sublocality_level_1')
+    )?.long_name;
+
+    console.log(addressComponents);
+    console.log(sublocality_level_1);
   };
 
   const clearSearch = () => {
@@ -63,16 +76,26 @@ const Discover = () => {
     setSelectedLocation(null);
   }
 
+  const onRegionChange = (newRegion) => {
+    const restrictedRegion = {
+      ...newRegion,
+      latitudeDelta: Math.max(newRegion.latitudeDelta, MIN_LATITUDE_DELTA),
+      longitudeDelta: Math.max(newRegion.longitudeDelta, MIN_LONGITUDE_DELTA),
+    };
+    setRegion(restrictedRegion);
+  }
+
   return (
     <View style={styles.container}>
       <GooglePlacesAutocomplete 
         ref={searchRef}
-        placeholder='Search with address or city ...'
+        placeholder='Search address or city ...'
         onPress={(data, details = null) => handleLocationSelect(data, details)}
         query={{
           key: googleMapsApiKey,
           language: 'en',
           // types: '(cities)',
+          components: "country:my", 
         }}
         fetchDetails={true}
         styles={styles.SearchBar}
@@ -88,10 +111,12 @@ const Discover = () => {
           provider={PROVIDER_GOOGLE}
           style={styles.mapStyle}
           zoomEnabled={true}
+          scrollEnabled={true}
           initialRegion={region}
           region={region}
           showsUserLocation={true}
           showsMyLocationButton={true}
+          maxZoomLevel={14}
         >
           {selectedLocation && (
             <Marker coordinate={selectedLocation} title='Selected Location' />

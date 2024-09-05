@@ -22,6 +22,7 @@ import next from "../assets/icons/next.png";
 import male from "../assets/icons/male.png";
 import female from "../assets/icons/female.png";
 import question from "../assets/icons/question.png";
+import trash from "../assets/icons/trash.png";
 
 export default {
   play,
@@ -48,4 +49,5 @@ export default {
   male,
   female,
   question,
+  trash,
 };

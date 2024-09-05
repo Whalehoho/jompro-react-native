@@ -55,10 +55,13 @@ const LivenessVerification = () => {
 
     useEffect(() => {
         const getPermissions = async () => {
-            const status = await Camera.getCameraPermissionStatus();
-            if (status !== 'authorized') {
-                await Camera.requestCameraPermission();
-            }
+            const status = await new Promise((resolve) => {
+            const status = Camera.getCameraPermissionStatus();
+            resolve(status);
+        });
+        if (status !== 'authorized') {
+            await Camera.requestCameraPermission();
+        }
         };
         getPermissions();
         
