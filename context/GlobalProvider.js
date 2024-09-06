@@ -43,6 +43,8 @@ const GlobalProvider = ({ children }) => {
         AsyncStorage.removeItem('isLoggedIn');
         AsyncStorage.removeItem('user');
         AsyncStorage.removeItem('profileImage');
+        AsyncStorage.removeItem('userAddresses');
+        AsyncStorage.removeItem('userToken');
     };
 
     return (

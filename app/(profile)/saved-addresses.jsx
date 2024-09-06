@@ -268,10 +268,11 @@ const SavedAddresses = () => {
             <CustomButton
               title="Add new address"
               handlePress={() => {
-                if (userAddresses?.data?.addresses.length < 5) {
-                  setShowForm(true);
-                } else {
+                if (userAddresses?.data?.addresses.length >= 5) {
                   Alert.alert("Limit Reached", "You can only save up to 5 addresses.");
+                } else {
+                  setShowForm(true);
+
                 }
               }}
               containerStyles="rounded-md"
