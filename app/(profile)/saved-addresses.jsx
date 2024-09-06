@@ -1,13 +1,17 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Button, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import Constants from 'expo-constants';
 const { googleMapsApiKey } = Constants.expoConfig.extra;
 
 import CustomButton from '../../components/CustomButton';
 import { icons } from '../../constants';
+import { add } from '@shopify/react-native-skia';
+
+import * as api from '../../api'
 
 const SavedAddresses = () => {
   const [addresses, setAddresses] = useState([
@@ -18,43 +22,124 @@ const SavedAddresses = () => {
     },
     {
       id: '2',
-      label: '40, Jalan Indah 22/6Taman Bukit Indah 2, 81200 Johor Bahru, Johor',
+      label: '40, Jalan Indah 22/6, Taman Bukit Indah 2, 81200 Johor Bahru, Johor',
       details: '',
     },
   ]);
 
+  const [user, setUser] = useState(null);
+  const [userAddresses, setUserAddresses] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [newAddress, setNewAddress] = useState('');
+  const [newAddress, setNewAddress] = useState(null);
   const [newDetails, setNewDetails] = useState('');
 
   const searchRef = useRef(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
+      } catch (error) {
+        console.error('Failed to load user from storage:', error);
+      }
+    };
+
+    const fetchUserAddresses = async () => {
+      try {
+        const storedAddresses = await AsyncStorage.getItem('userAddresses');
+        if (storedAddresses) {
+          setUserAddresses(JSON.parse(storedAddresses));
+        }
+      } catch (error) {
+        console.error('Failed to load user addresses from storage:', error);
+      }
+    };
+
+    fetchUserData();
+    fetchUserAddresses();
+  }, []);
 
   const clearSearch = () => {
     if (searchRef.current) {
       searchRef.current.clear();
       searchRef.current.blur();
     }
-    setNewAddress('');
+    setNewAddress(null);
   };
 
   const handleLocationSelect = (data, details) => {
+    console.log('userAddresses:', userAddresses?.data?.addresses.length);
     const selectedAddress = data.description;
-    setNewAddress(selectedAddress);
+    const { lat, lng } = details.geometry.location;
+    const addressComponents = details.address_components;
+    const sublocality_level_1 = addressComponents.find(component =>
+      component.types.includes('sublocality_level_1')
+    )?.long_name;
+    const locality = addressComponents.find(component =>
+      component.types.includes('locality')
+    )?.long_name;
+    // console.log('full address:', selectedAddress);
+    // console.log('city:', locality);
+    // console.log('region:', sublocality_level_1);
+    // console.log('lat:', lat);
+    // console.log('lng:', lng);
+    setNewAddress({
+      fullAddress: selectedAddress,
+      city: locality,
+      region: sublocality_level_1,
+      lat: lat,
+      lng: lng,
+    });
   };
 
-  const handleAddAddress = () => {
+  const handleAddAddress = async () => {
+    console.log('Before: userAddresses:', userAddresses?.data?.addresses.length);
+    
+    if (userAddresses?.data?.addresses.some(address => address.fullAddress === newAddress?.fullAddress)) {
+      Alert.alert("Duplicate Address", "This address already exists in your saved addresses.");
+      setNewAddress(null);
+      return;
+    }
+
     if (newAddress) {
       const newEntry = {
-        id: (addresses.length + 1).toString(),
-        label: newAddress,
-        details: newDetails,
+        fullAddress: newAddress.fullAddress,
+        city: newAddress.city,
+        region: newAddress.region,
+        lat: newAddress.lat,
+        lng: newAddress.lng,
       };
-      setAddresses([...addresses, newEntry]);
+
+      const updatedAddresses = {
+        ...userAddresses,
+        data: { 
+          ...userAddresses.data,
+          addresses: [...(userAddresses?.data?.addresses || []), newEntry] 
+        },
+      };
+
+      setUserAddresses(updatedAddresses);
+      
+      console.log('After: updatedAddresses:', updatedAddresses);
+      
+      const response = await api.user.addAddress(user.accountId, newAddress);
+      if(response.data === 'success') {
+        await AsyncStorage.setItem('userAddresses', JSON.stringify(updatedAddresses));
+      } else if(response.data === 'duplicate') {
+        Alert.alert("Duplicate Address", "This address already exists in your saved addresses.");
+      }else {
+        Alert.alert("Add Address Status", response.data);
+      }
+
       setShowForm(false);
-      setNewAddress('');
+      setNewAddress(null);
       setNewDetails('');
     }
-  };
+};
+
 
   const renderAddress = ({ item }) => (
     <View className="flex-row justify-between items-center border-b border-gray-200 py-2">
@@ -62,21 +147,99 @@ const SavedAddresses = () => {
         <View className="flex-row justify-between items-center gap-5">
           {/* <Image source={icons.location} className="w-6 h-6" /> */}
           <View className="flex-1"> 
-            <Text className="text-base font-semibold">{item.label}</Text>
+            <Text className="text-base font-semibold">{item.fullAddress}</Text>
           </View>
         </View>
         {
-          item.details && item.details === 'default' ? (
-            <Text className="text-base text-secondary ml-0 mt-2 font-semibold italic">{item.details}</Text>
+          // console.log("defaultAddress", userAddresses.data.defaultAddress.fullAddress) &&
+          userAddresses.data.defaultAddress && item.fullAddress === userAddresses.data.defaultAddress.fullAddress ? (
+            <Text className="text-base text-secondary ml-0 mt-2 font-semibold italic">default</Text>
           ) : (
-            <TouchableOpacity onPress={() => console.log("Set as default pressed")}>
-              <Text className="text-base text-secondary ml-0 mt-2 underline">set as default</Text>
-            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={async () => {
+                console.log("Set as default pressed");
+                const updatedAddress = {
+                  fullAddress: item.fullAddress,
+                  city: item.city,
+                  region: item.region,
+                  lat: item.lat,
+                  lng: item.lng,
+                };
+            
+                await api.user.updateDefaultAddress({
+                  accountId: user.accountId,
+                  defaultAddress: updatedAddress,
+                });
+            
+                // Create a new updated userAddresses object with the updated default address
+                /* modify the original userAddresses object without creating a new one, 
+                it can lead to unpredictable behavior. The React component may not update 
+                correctly because React relies on immutability to track changes. */
+                const updatedUserAddresses = {
+                  ...userAddresses,
+                  data: {
+                    ...userAddresses.data,
+                    defaultAddress: updatedAddress,
+                  },
+                };
+            
+                setUserAddresses(updatedUserAddresses);
+                await AsyncStorage.setItem('userAddresses', JSON.stringify(updatedUserAddresses));
+                console.log("defaultAddress", updatedUserAddresses.data.defaultAddress.fullAddress);
+              }}
+          >
+            <Text className="text-base text-secondary ml-0 mt-2 underline">set as default</Text>
+          </TouchableOpacity>
+          
           )
         }
       </View>
       
-        <TouchableOpacity onPress={() => console.log("Trash icon pressed")}>
+        <TouchableOpacity 
+          onPress={async () => {
+            console.log("Trash icon pressed")
+            if(userAddresses.data.defaultAddress.fullAddress === item.fullAddress) {
+              Alert.alert("Default Address", "You cannot remove your default address.");
+              return;
+            }
+            Alert.alert(
+              'Confirm Remove',
+              'Are you sure you want to remove this address?',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                },
+                {
+                  text: 'Remove',
+                  onPress: async () => {
+                    console.log('Remove address');
+                    const updatedAddresses = {
+                      ...userAddresses,
+                      data: {
+                        ...userAddresses.data,
+                        addresses: userAddresses.data.addresses.filter(
+                          (address) => address.fullAddress !== item.fullAddress
+                        ),
+                      },
+                    };
+                    setUserAddresses(updatedAddresses);
+                    await AsyncStorage.setItem('userAddresses', JSON.stringify(updatedAddresses));
+
+                    await api.user.removeAddress(user.accountId, {
+                      fullAddress: item.fullAddress,
+                      city: item.city,
+                      region: item.region,
+                      lat: item.lat,
+                      lng: item.lng,
+                    });
+                  },
+                },
+              ]
+            );
+            
+          }}
+        >
           <View className="bg-red-500 px-4 py-8 items-center justify-center">
             <Image source={icons.trash} className="w-6 h-6" />
           </View>
@@ -93,8 +256,8 @@ const SavedAddresses = () => {
         <View className="w-full min-h-[85vh] px-4">
           {/* FlatList to render dynamic addresses */}
           <FlatList
-            data={addresses}
-            keyExtractor={(item) => item.id}
+            data={userAddresses?.data?.addresses}
+            keyExtractor={(item) => item.fullAddress}
             renderItem={renderAddress}
           />
          
@@ -105,7 +268,7 @@ const SavedAddresses = () => {
             <CustomButton
               title="Add new address"
               handlePress={() => {
-                if (addresses.length < 5) {
+                if (userAddresses?.data?.addresses.length < 5) {
                   setShowForm(true);
                 } else {
                   Alert.alert("Limit Reached", "You can only save up to 5 addresses.");

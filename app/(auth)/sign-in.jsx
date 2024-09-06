@@ -43,6 +43,11 @@ const SignIn = () => {
         // Set user in global state using Context
         loginUser(message.user)
         console.log(message.user)
+        // Fetch user addresses and set in global state
+        const addresses = await api.user.fetchAddresses(message.user.accountId)
+        await AsyncStorage.setItem('userAddresses', JSON.stringify(addresses))
+        // console.log('userAddresses', await AsyncStorage.getItem('userAddresses'))
+
         // Redirect to Home
         router.replace('/home')
       }

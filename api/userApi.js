@@ -41,3 +41,45 @@ export const updateProfile = async (userData) => {
     throw error;
   }
 }
+
+export const addAddress = async (accountId, addressData) => {
+  try {
+    console.log('addressData', addressData);
+    const response = await apiClient.put(`/region/addAddress/${accountId}`, addressData);
+    return response.data;
+  } catch (error) {
+    console.error('Error adding address:', error);
+    throw error;
+  }
+}
+
+export const fetchAddresses = async (accountId) => {
+  try {
+    const response = await apiClient.get(`/region/accountId/${accountId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching addresses:', error);
+    throw error;
+  }
+}
+
+export const updateDefaultAddress = async (defaultAddress) => {
+  try {
+    const response = await apiClient.put(`/region/updateDefault`, defaultAddress);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating default address:', error);
+    throw error;
+  }
+}
+
+export const removeAddress = async (accountId, addressData) => {
+  try {
+    const response = await apiClient.put(`/region/removeAddress/${accountId}`, addressData);
+    return response.data;
+  } catch (error) {
+    console.error('Error removing address:', error);
+    throw error;
+  }
+}
+
