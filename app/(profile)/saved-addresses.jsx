@@ -71,7 +71,7 @@ const SavedAddresses = () => {
   };
 
   const handleLocationSelect = (data, details) => {
-    console.log('userAddresses:', userAddresses?.data?.addresses.length);
+    // console.log('userAddresses:', userAddresses?.data?.addresses.length);
     const selectedAddress = data.description;
     const { lat, lng } = details.geometry.location;
     const addressComponents = details.address_components;
@@ -81,8 +81,8 @@ const SavedAddresses = () => {
     const locality = addressComponents.find(component =>
       component.types.includes('locality')
     )?.long_name;
-    // console.log('full address:', selectedAddress);
-    // console.log('city:', locality);
+    console.log('full address:', selectedAddress);
+    console.log('city:', locality);
     // console.log('region:', sublocality_level_1);
     // console.log('lat:', lat);
     // console.log('lng:', lng);
@@ -96,7 +96,6 @@ const SavedAddresses = () => {
   };
 
   const handleAddAddress = async () => {
-    console.log('Before: userAddresses:', userAddresses?.data?.addresses.length);
     
     if (userAddresses?.data?.addresses.some(address => address.fullAddress === newAddress?.fullAddress)) {
       Alert.alert("Duplicate Address", "This address already exists in your saved addresses.");
@@ -123,7 +122,6 @@ const SavedAddresses = () => {
 
       setUserAddresses(updatedAddresses);
       
-      console.log('After: updatedAddresses:', updatedAddresses);
       
       const response = await api.user.addAddress(user.accountId, newAddress);
       if(response.data === 'success') {
@@ -157,7 +155,6 @@ const SavedAddresses = () => {
           ) : (
             <TouchableOpacity
               onPress={async () => {
-                console.log("Set as default pressed");
                 const updatedAddress = {
                   fullAddress: item.fullAddress,
                   city: item.city,
@@ -376,7 +373,7 @@ const styles = StyleSheet.create({
   clearButton: {
     position: 'absolute',
     top: 0,
-    right: 15, 
+    right: 6, 
     backgroundColor: 'transparent',
     padding: 10,
     borderRadius: 5,
