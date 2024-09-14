@@ -23,6 +23,9 @@ import male from "../assets/icons/male.png";
 import female from "../assets/icons/female.png";
 import question from "../assets/icons/question.png";
 import trash from "../assets/icons/trash.png";
+import schedule from "../assets/icons/schedule.png";
+import flash from "../assets/icons/flash.png";
+import create from "../assets/icons/create.png";
 
 export default {
   play,
@@ -50,4 +53,7 @@ export default {
   female,
   question,
   trash,
+  schedule,
+  flash,
+  create,
 };
