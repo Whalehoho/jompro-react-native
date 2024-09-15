@@ -26,6 +26,29 @@ import trash from "../assets/icons/trash.png";
 import schedule from "../assets/icons/schedule.png";
 import flash from "../assets/icons/flash.png";
 import create from "../assets/icons/create.png";
+import sports from "../assets/icons/categories/sports.png";
+import workout from "../assets/icons/categories/workout.png";
+import dining from "../assets/icons/categories/dining.png";
+import outdoor from "../assets/icons/categories/outdoor.png";
+import arts from "../assets/icons/categories/arts.png";
+import culture from "../assets/icons/categories/culture.png";
+import travel from "../assets/icons/categories/travel.png";
+import charity from "../assets/icons/categories/charity.png";
+import hobbies from "../assets/icons/categories/hobbies.png";
+import tech from "../assets/icons/categories/tech.png";
+import seminar from "../assets/icons/categories/seminar.png";
+import pets from "../assets/icons/categories/pets.png";
+import science from "../assets/icons/categories/science.png";
+import boardGames from "../assets/icons/categories/board-games.png";
+import cosplay from "../assets/icons/categories/cosplay.png";
+import gardening from "../assets/icons/categories/gardening.png";
+import pin from "../assets/icons/pin.png";
+import calendar from "../assets/icons/calendar.png";
+import stopwatch from "../assets/icons/stop-watch.png";
+import people from "../assets/icons/people.png";
+import gender from "../assets/icons/gender.png";
+import age from "../assets/icons/age.png";
+import approved from "../assets/icons/approved.png";
 
 export default {
   play,
@@ -56,4 +79,27 @@ export default {
   schedule,
   flash,
   create,
+  sports,
+  workout,
+  dining,
+  outdoor,
+  arts,
+  culture,
+  travel,
+  charity,
+  hobbies,
+  tech,
+  seminar,
+  pets,
+  science,
+  boardGames,
+  cosplay,
+  gardening,
+  pin,
+  calendar,
+  stopwatch,
+  people,
+  gender,
+  age,
+  approved,
 };

@@ -1,9 +1,12 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import React, { useState, useRef, useMemo } from 'react';
 import { Tabs } from 'expo-router';
 import { icons } from '../../constants';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';  // Import BottomSheetBackdrop
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+import OneTimeEventForm from '../../components/forms/OneTimeEventForm';
 
 
 const TabIcon = ({ icon, color, name, focused }) => {
@@ -24,54 +27,68 @@ const TabIcon = ({ icon, color, name, focused }) => {
   );
 };
 
-const BottomSheetContent = () => {
+const BottomSheetContent = ({ handleShowForm, showForm }) => {
+  
+
   return (
-    <View className="px-4 py-6">
-      <TouchableOpacity className="mb-2">
-        <View className="flex-row items-start justify-start">
-          <View>
-            <Image source={icons.schedule} className="w-6 h-6" />
-          </View>
-          <View className="ml-6 flex-shrink">
-            <Text className="font-psemibold text-lg">Regular Event</Text>
-            <Text className="text-gray-500 text-xs font-pmedium">Create a recurring event for regular meetups or activities.</Text>
-          </View>
-          <View className="ml-1">
-            <Image source={icons.next} className="w-4 h-4 ml-1 mr-1" />
-          </View>
-        </View>
-      </TouchableOpacity>
-      <View style={styles.separator}/>
-      <TouchableOpacity className="mt-2 mb-2">
-      <View className="flex-row items-start justify-start">
-        <View>
-          <Image source={icons.flash} className="w-6 h-6" />
-        </View>
-        <View className="ml-6 flex-shrink">
-          <Text className="font-psemibold text-lg">One-Time Event</Text>
-          <Text className="text-gray-500 text-xs font-pmedium">Create a one-time event for casual meetups or activities.</Text>
-        </View>
-        <View className="ml-1">
-            <Image source={icons.next} className="w-4 h-4 ml-1 mr-1" />
-        </View>
-      </View>
-      </TouchableOpacity>
-      <View style={styles.separator} />
-      <TouchableOpacity className="mt-2">
-      <View className="flex-row items-start justify-start">
-        <View>
-          <Image source={icons.play} className="w-6 h-6" />
-        </View>
-        <View className="ml-6 flex-shrink">
-          <Text className="font-psemibold text-lg">New Session</Text>
-          <Text className="text-gray-500 text-xs font-pmedium">Create new session from an existing event. (Only applicable for host or co-host)</Text>
-        </View>
-        <View className="ml-1">
-            <Image source={icons.next} className="w-4 h-4 ml-1 mr-1" />
-        </View>
-      </View>
-      </TouchableOpacity>
-    </View>
+    <ScrollView 
+      className="px-4 py-6"
+      keyboardShouldPersistTaps={'handled'}  // Ensures that taps on touchable elements (like the address list) are registered even when the keyboard is open.
+    >
+      { !showForm &&
+        <>
+          <TouchableOpacity className="mb-2">
+            <View className="flex-row items-start justify-start">
+              <View>
+                <Image source={icons.schedule} className="w-6 h-6" />
+              </View>
+              <View className="ml-6 flex-shrink">
+                <Text className="font-psemibold text-lg">Regular Event</Text>
+                <Text className="text-gray-500 text-xs font-pmedium">Create a recurring event for regular meetups or activities.</Text>
+              </View>
+              <View className="ml-2">
+                <Image source={icons.next} className="w-4 h-4 mr-1" />
+              </View>
+            </View>
+          </TouchableOpacity>
+          <View style={styles.separator}/>
+          <TouchableOpacity className="mt-2 mb-2" onPress={ () => {
+              handleShowForm('one-time');
+          }}>
+            <View className="flex-row items-start justify-start">
+              <View>
+                <Image source={icons.flash} className="w-6 h-6" />
+              </View>
+              <View className="ml-6 flex-shrink">
+                <Text className="font-psemibold text-lg">One-Time Event</Text>
+                <Text className="text-gray-500 text-xs font-pmedium">Create a one-time event for casual meetups or activities.</Text>
+              </View>
+              <View className="ml-2">
+                  <Image source={icons.next} className="w-4 h-4 mr-1" />
+              </View>
+            </View>
+          </TouchableOpacity>
+          <View style={styles.separator} />
+          <TouchableOpacity className="mt-2">
+            <View className="flex-row items-start justify-start">
+              <View>
+                <Image source={icons.play} className="w-6 h-6" />
+              </View>
+              <View className="ml-6 flex-shrink">
+                <Text className="font-psemibold text-lg">New Session</Text>
+                <Text className="text-gray-500 text-xs font-pmedium">Create new session for an existing event. (Only applicable for host or co-host)</Text>
+              </View>
+              <View className="ml-2">
+                  <Image source={icons.next} className="w-4 h-4 mr-1" />
+              </View>
+            </View>
+          </TouchableOpacity>
+        </>
+      }
+
+      {showForm === 'one-time' && <OneTimeEventForm />}
+      
+    </ScrollView>
   );
 };
 
@@ -88,6 +105,11 @@ const TabsLayout = () => {
   const bottomSheetRef = useRef(null);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
 
+  const [showForm, setShowForm] = useState(null);  // State to manage which form is shown
+  const handleShowForm = (formType) => {
+    setShowForm(formType); // Set the form type to show
+  };
+
   const handleOpenBottomSheet = () => {
     bottomSheetRef.current?.expand();
     setIsBottomSheetOpen(true);
@@ -96,9 +118,10 @@ const TabsLayout = () => {
   const handleCloseBottomSheet = () => {
     bottomSheetRef.current?.close();
     setIsBottomSheetOpen(false);
+    setShowForm(null);
   };
 
-  const snapPoints = useMemo(() => ['50%'], []);
+  const snapPoints = useMemo(() => ['80%'], []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -182,8 +205,10 @@ const TabsLayout = () => {
           borderTopRightRadius: 25,
         }}
       >
-        <BottomSheetContent />
+        <BottomSheetContent handleShowForm={handleShowForm} showForm={showForm}/>
       </BottomSheet>
+
+      
 
     </GestureHandlerRootView>
   );

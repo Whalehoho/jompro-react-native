@@ -3,23 +3,31 @@ import React, { useState } from 'react'
 
 import { icons } from '../constants'
 
-const FormField = ({ title, subtitle, value, placeholder, handleChangeText, titleStyle, subtitleStyle, boxStyle, otherStyles, ...props}) => {
+const FormField = ({ title, subtitle, value, placeholder, handleChangeText, titleStyle, subtitleStyle, boxStyle, multiLine, otherStyles, ...props}) => {
     const [showPassword, setShowPassword] = useState(false)
   
     return (
     <View className={`space-y-2 ${otherStyles}`}>
       <View>
-        <Text className={`text-base text-secondary font-pmedium ${titleStyle}`}>{title}</Text>
+        {title && <Text className={`text-base text-secondary font-pmedium ${titleStyle}`}>{title}</Text>}
         {subtitle && <Text className={`text-xs text-gray-400 ${subtitleStyle}`}>{subtitle}</Text>}
       </View>
      
       <View className={`flex-row border-2 border-secondary-200 w-full h-16 px-4 bg-white rounded-2xl focus:border-secondary items-center ${boxStyle}`}>
         <TextInput
             className="flex-1 text-black font-psemibold text-base"
+            multiline={multiLine}
             value={value}
             placeholder={placeholder}
             placeholderTextColor='#7b7b8b'
-            onChangeText={text => handleChangeText(text.trim())}
+            onChangeText={text => {
+              if(!multiLine){
+                handleChangeText(text.trim())
+              }
+              else{
+                handleChangeText(text)
+              }
+            }}
             secureTextEntry={title.includes('Password') && !showPassword}
         />
 
