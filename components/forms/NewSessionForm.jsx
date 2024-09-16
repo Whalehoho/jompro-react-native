@@ -42,12 +42,12 @@ const genderRestrictions = ['No restrictions', 'Male', 'Female'];
 
 const ageRestrictions = ['No restrictions', 'Adult (18-50)', 'Senior (50+)'];
 
-const OneTimeEventForm = ({ onSubmit }) => {
+const NewSessionForm = ({ onSubmit }) => {
   const [form, setForm] = useState({
-    eventName: '',
-    eventDescription: '',
-    eventDate: null,
-    category: '',
+    event: null,
+    sessionName: '',
+    sessionDescription: '',
+    sessionDate: null,
     duration: '',
     participants: '1',
     location: null,
@@ -57,6 +57,7 @@ const OneTimeEventForm = ({ onSubmit }) => {
   });
 
   const [user, setUser] = useState(null);
+  const [myEvents, setMyEvents] = useState([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -69,11 +70,31 @@ const OneTimeEventForm = ({ onSubmit }) => {
         console.error('Failed to load user from storage:', error);
       }
     };
-
     fetchUserData();
   }, []);
 
+  useEffect(() => {
+    const fetchMyEvents = async () => {
+        try{
+            const response = await api.event.getMyEvents(user.accountId);
+            // console.log('My events:', response.data);
+            setMyEvents(response.data);
+        } catch (error) {
+            // console.error('Failed to fetch events:', error);
+        }
+    };
+    fetchMyEvents();
+  }, [user]); // Fetch events when user state changes
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Modal states for event selection
+  const [showEventModal, setShowEventModal] = useState(false);
+
+  const handleEventSelect = (selectedEvent) => {
+    setForm({ ...form, event: selectedEvent });
+    setShowEventModal(false);
+  };
 
   // DateTimePicker states
   const [date, setDate] = useState(new Date());
@@ -152,10 +173,9 @@ const OneTimeEventForm = ({ onSubmit }) => {
   }
 
   const handleSubmit = async () => {
-    // console.log('Form data:', form);
     setIsSubmitting(true);
-    if(!form || !form.eventName || !form.eventDescription 
-        || !form.eventDate || !form.category || !form.duration 
+    if(!form || !form.event || !form.sessionName || !form.sessionDescription 
+        || !form.sessionDate || !form.duration 
         || !form.participants || !form.location || !form.genderRestriction 
         || !form.ageRestriction) {
             Alert.alert('Please fill in all fields');
@@ -164,26 +184,17 @@ const OneTimeEventForm = ({ onSubmit }) => {
     }
 
     try{
-      const eventDate = new Date(form.eventDate).getTime() / 1000;
+      const sessionDate = new Date(form.sessionDate).getTime() / 1000;
       const duration = convertDurationToSeconds(form.duration);
       const ageRestriction = parseAgeRestriction(form.ageRestriction);
-      const response = await api.event.updateEvent({
-        hostId: user.accountId,
-        category: form.category,
-        eventName: form.eventName,
-        eventDesc: form.eventDescription,
-        pattern: 'one-time',
-        status: 'active',
-      });
-      // console.log('Event created:', response);
-      const eventId = response.data.event_id;
+      const eventId = form.event.eventId;
       await api.event.updateSession({
         eventId: eventId,
-        sessionName: form.eventName,
-        sessionDesc: form.eventDescription,
+        sessionName: form.sessionName,
+        sessionDesc: form.sessionDescription,
         organizerId: user.accountId,
         status: 'active',
-        startTime: eventDate,
+        startTime: sessionDate,
         duration: duration,
         location: form.location,
         maxParticipants: parseInt(form.participants, 10),
@@ -191,7 +202,7 @@ const OneTimeEventForm = ({ onSubmit }) => {
         ageRestriction: ageRestriction,
         autoApprove: form.autoApprove,
       });
-      Alert.alert('Success', 'Event created successfully');
+      Alert.alert('Success', 'Session created successfully');
     } catch (error) {
       if (!error.response || error.response.status !== 401) {
         Alert.alert('Error', error.message || 'Something went wrong');
@@ -206,8 +217,8 @@ const OneTimeEventForm = ({ onSubmit }) => {
     const currentDate = selectedDate || date;
     setShowDatePicker(false);
     setDate(currentDate); // Update the date in state
-    // setForm({ ...form, eventDate: currentDate.toLocaleString() }); // Add the selected date to the form state
-    setForm({ ...form, eventDate: currentDate });
+    // setForm({ ...form, sessionDate: currentDate.toLocaleString() }); // Add the selected date to the form state
+    setForm({ ...form, sessionDate: currentDate });
   };
 
   const showMode = (currentMode) => {
@@ -241,56 +252,19 @@ const OneTimeEventForm = ({ onSubmit }) => {
 
   return (
     <View className="px-2 py-2">
-      <Text className="font-pbold text-xl mb-8 text-center">CREATE A ONE-TIME MEET</Text>
+      <Text className="font-pbold text-xl mb-8 text-center">CREATE A NEW SESSION</Text>
 
-      <Text className="font-pmedium text-sm text-gray-500">CATEGORY</Text>
+      <Text className="font-pmedium text-sm text-gray-500">EVENT</Text>
 
-      {/* Horizontal ScrollView with two rows */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 10 }}
-        style={{ marginTop: 16 }}
-      >
-        {/* Map through categories */}
-        <View style={{ flexDirection: 'column' }}>
-          <View style={{ flexDirection: 'row' }}>
-            {categories.slice(0, 8).map((item, index) => (
-              <TouchableOpacity
-                key={index}
-                className={`py-4 px-6 items-center border-2 rounded-lg mx-2 ${
-                  form.category === item.title ? 'bg-primary border-primary' : 'border-gray-300'
-                }`}
-                style={{ width: 120, height: 100 }}
-                onPress={() => setForm({ ...form, category: item.title })}
-              >
-                <View className="flex-1 items-center justify-evenly space-y-2">
-                  <Image source={item.icon} resizeMode="contain" className="w-6 h-6" />
-                  <Text className="text-md font-psemibold text-black text-center">{item.title}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
+      <TouchableOpacity onPress={() => setShowEventModal(true)}>
+          <View className="flex-row space-x-4 mt-4">
+            <Image source={icons.event} className="w-6 h-6" tintColor={'#5e40b7'} />
+            <Text className="font-pregular text-base">
+              {form.event ? `${form.event.eventName}` : 'Select From My Events'}
+            </Text>
           </View>
+        </TouchableOpacity>
 
-          <View style={{ flexDirection: 'row', marginTop: 10 }}>
-            {categories.slice(8, 16).map((item, index) => (
-              <TouchableOpacity
-                key={index}
-                className={`py-4 px-6 items-center border-2 rounded-lg mx-2 ${
-                  form.category === item.title ? 'bg-primary border-primary' : 'border-gray-300'
-                }`}
-                style={{ width: 120, height: 100 }}
-                onPress={() => setForm({ ...form, category: item.title })}
-              >
-                <View className="flex-1 items-center justify-evenly space-y-2">
-                  <Image source={item.icon} resizeMode="contain" className="w-6 h-6" />
-                  <Text className="text-md font-psemibold text-black text-center">{item.title}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </ScrollView>
 
       <View style={styles.separator} className="mt-8 mb-0" />
 
@@ -301,7 +275,7 @@ const OneTimeEventForm = ({ onSubmit }) => {
           <View className="flex-row space-x-4">
             <Image source={icons.calendar} className="w-6 h-6" tintColor={'#5e40b7'} />
             <Text className="font-pregular text-base">
-              {form.eventDate ? `${form.eventDate}` : 'Select Date and Time'}
+              {form.sessionDate ? `${form.sessionDate}` : 'Select Date and Time'}
             </Text>
           </View>
         </TouchableOpacity>
@@ -354,15 +328,15 @@ const OneTimeEventForm = ({ onSubmit }) => {
 
       <View style={styles.separator} className="mt-8 mb-0" />
 
-      <Text className="font-pmedium text-sm text-gray-500 mt-8">EVENT NAME</Text>
+      <Text className="font-pmedium text-sm text-gray-500 mt-8">SESSION NAME</Text>
 
 
 
       <FormField
         title=""
-        value={form.eventName}
-        handleChangeText={(text) => setForm({ ...form, eventName: text })}
-        placeholder="Add Event Name"
+        value={form.sessionName}
+        handleChangeText={(text) => setForm({ ...form, sessionName: text })}
+        placeholder="Add Session Name"
         titleStyle="text-black"
         boxStyle="border-gray-200 bg-gray-200 rounded-sm h-14 px-4"
         otherStyles="mt-5 space-y-1"
@@ -371,8 +345,8 @@ const OneTimeEventForm = ({ onSubmit }) => {
 
       <FormField
          title=""
-         value={form.eventDescription}
-         handleChangeText={(text) => setForm({ ...form, eventDescription: text })}
+         value={form.sessionDescription}
+         handleChangeText={(text) => setForm({ ...form, sessionDescription: text })}
          multiLine={true}
          placeholder="Add Notes or Description"
          titleStyle="text-black"
@@ -418,6 +392,56 @@ const OneTimeEventForm = ({ onSubmit }) => {
           </View>
 
       </View>
+
+    {/* Modal for selecting event */}
+    <Modal visible={showEventModal} transparent={true} animationType="slide">
+        <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+            <FlatList
+                data={myEvents}
+                keyExtractor={(item) => item.eventId.toString()}
+                renderItem={({ item }) => {
+                // Find the matching category from your categories array
+                const eventCategory = categories.find(
+                    (category) => category.title === item.category
+                );
+                const eventIcon = eventCategory ? eventCategory.icon : null;
+
+                return (
+                    <TouchableOpacity
+                        style={styles.modalItem}
+                        onPress={() => handleEventSelect(item)}
+                    >
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            {/* Icon on the left */}
+                            {eventIcon && (
+                                <View style={{ flex: 0 }}>
+                                <Image
+                                    source={eventIcon}
+                                    style={{ width: 24, height: 24, marginRight: 10 }}
+                                />
+                                </View>
+                            )}
+                            
+                            {/* Event name in the center */}
+                            <View style={{ flex: 1, alignItems: 'center' }}>
+                                <Text style={styles.modalItemText}>{item.eventName}</Text>
+                            </View>
+                        </View>
+                    </TouchableOpacity>
+                );
+                }}
+            />
+            <CustomButton
+                title="Close"
+                handlePress={() => setShowEventModal(false)}
+                containerStyles="w-full mt-7 rounded-md min-h-[48px]"
+                textStyles="text-base"
+            />
+            </View>
+        </View>
+    </Modal>
+
 
 
       {showDatePicker && (
@@ -558,7 +582,7 @@ const OneTimeEventForm = ({ onSubmit }) => {
 
       <View className="flex-row items-center justify-center mb-8">
         <CustomButton
-          title="Create Event"
+          title="Create Session"
           handlePress={handleSubmit}
           containerStyles="w-4/5 mt-7 rounded-md"
           textStyles="text-base"
@@ -569,7 +593,7 @@ const OneTimeEventForm = ({ onSubmit }) => {
   );
 };
 
-export default OneTimeEventForm;
+export default NewSessionForm;
 
 const styles = StyleSheet.create({
   separator: {

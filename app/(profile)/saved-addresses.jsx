@@ -14,18 +14,6 @@ import { add } from '@shopify/react-native-skia';
 import * as api from '../../api'
 
 const SavedAddresses = () => {
-  const [addresses, setAddresses] = useState([
-    {
-      id: '1',
-      label: 'Jalan 3/149e, Taman Sri Endah, 57000 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur',
-      details: 'default',
-    },
-    {
-      id: '2',
-      label: '40, Jalan Indah 22/6, Taman Bukit Indah 2, 81200 Johor Bahru, Johor',
-      details: '',
-    },
-  ]);
 
   const [user, setUser] = useState(null);
   const [userAddresses, setUserAddresses] = useState(null);

@@ -7,6 +7,8 @@ import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/botto
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import OneTimeEventForm from '../../components/forms/OneTimeEventForm';
+import RegularEventForm from '../../components/forms/RegularEventForm';
+import NewSessionForm from '../../components/forms/NewSessionForm';
 
 
 const TabIcon = ({ icon, color, name, focused }) => {
@@ -27,7 +29,7 @@ const TabIcon = ({ icon, color, name, focused }) => {
   );
 };
 
-const BottomSheetContent = ({ handleShowForm, showForm }) => {
+const BottomSheetContent = ({ handleShowForm, handleCloseForm, showForm }) => {
   
 
   return (
@@ -37,7 +39,9 @@ const BottomSheetContent = ({ handleShowForm, showForm }) => {
     >
       { !showForm &&
         <>
-          <TouchableOpacity className="mb-2">
+          <TouchableOpacity className="mb-2"onPress={ () => {
+              handleShowForm('regular');
+          }}>
             <View className="flex-row items-start justify-start">
               <View>
                 <Image source={icons.schedule} className="w-6 h-6" />
@@ -69,7 +73,9 @@ const BottomSheetContent = ({ handleShowForm, showForm }) => {
             </View>
           </TouchableOpacity>
           <View style={styles.separator} />
-          <TouchableOpacity className="mt-2">
+          <TouchableOpacity className="mt-2" onPress={ () => {
+              handleShowForm('new-session');
+          }}>
             <View className="flex-row items-start justify-start">
               <View>
                 <Image source={icons.play} className="w-6 h-6" />
@@ -86,7 +92,9 @@ const BottomSheetContent = ({ handleShowForm, showForm }) => {
         </>
       }
 
-      {showForm === 'one-time' && <OneTimeEventForm />}
+      {showForm === 'one-time' && <OneTimeEventForm onSubmit={handleCloseForm}/>}
+      {showForm === 'regular' && <RegularEventForm onSubmit={handleCloseForm}/>}
+      {showForm === 'new-session' && <NewSessionForm onSubmit={handleCloseForm}/>}
       
     </ScrollView>
   );
@@ -108,6 +116,9 @@ const TabsLayout = () => {
   const [showForm, setShowForm] = useState(null);  // State to manage which form is shown
   const handleShowForm = (formType) => {
     setShowForm(formType); // Set the form type to show
+  };
+  const handleCloseForm = () => {
+    setShowForm(null); // Close the form
   };
 
   const handleOpenBottomSheet = () => {
@@ -205,7 +216,7 @@ const TabsLayout = () => {
           borderTopRightRadius: 25,
         }}
       >
-        <BottomSheetContent handleShowForm={handleShowForm} showForm={showForm}/>
+        <BottomSheetContent handleShowForm={handleShowForm} handleCloseForm={handleCloseForm} showForm={showForm}/>
       </BottomSheet>
 
       

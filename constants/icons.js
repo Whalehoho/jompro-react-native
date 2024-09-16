@@ -49,6 +49,7 @@ import people from "../assets/icons/people.png";
 import gender from "../assets/icons/gender.png";
 import age from "../assets/icons/age.png";
 import approved from "../assets/icons/approved.png";
+import event from "../assets/icons/event.png";
 
 export default {
   play,
@@ -102,4 +103,5 @@ export default {
   gender,
   age,
   approved,
+  event,
 };
