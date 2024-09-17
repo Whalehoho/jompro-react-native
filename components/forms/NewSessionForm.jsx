@@ -76,7 +76,7 @@ const NewSessionForm = ({ onSubmit }) => {
   useEffect(() => {
     const fetchMyEvents = async () => {
         try{
-            const response = await api.event.getMyEvents(user.accountId);
+            const response = await api.event.getMyEvents(user.accountId, 'active');
             // console.log('My events:', response.data);
             setMyEvents(response.data);
         } catch (error) {

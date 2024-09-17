@@ -50,6 +50,7 @@ import gender from "../assets/icons/gender.png";
 import age from "../assets/icons/age.png";
 import approved from "../assets/icons/approved.png";
 import event from "../assets/icons/event.png";
+import maximize from "../assets/icons/maximize.png";
 
 export default {
   play,
@@ -104,4 +105,5 @@ export default {
   age,
   approved,
   event,
+  maximize,
 };

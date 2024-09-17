@@ -20,9 +20,29 @@ export const updateSession = async (sessionData) => {
     }
 }
 
-export const getMyEvents = async (accountId) => {
+export const getMyEvents = async (accountId, status) => {
     try {
-        const response = await apiClient.get(`/event/getByHostOrCoHostId/${accountId}`, { timeout: 10000 });
+        const response = await apiClient.get(`/event/getByHostOrCoHostId/${accountId}/${status}`, { timeout: 10000 });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching events:', error);
+        throw error;
+    }
+}
+
+export const getEventByEventId = async (eventId) => {
+    try {
+        const response = await apiClient.get(`/event/getEventbyEventId/${eventId}`, { timeout: 10000 });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching event:', error);
+        throw error;
+    }
+}
+
+export const getAllActiveSessions = async () => {
+    try {
+        const response = await apiClient.get(`/event/getAllActiveSessions/`, { timeout: 10000 });
         return response.data;
     } catch (error) {
         console.error('Error fetching events:', error);

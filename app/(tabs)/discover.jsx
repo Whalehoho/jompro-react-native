@@ -1,14 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, Dimensions, Platform, PermissionsAndroid } from 'react-native';
+import { View, Image, TouchableOpacity, Text, StyleSheet, ScrollView, FlatList, Dimensions, Platform, PermissionsAndroid } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useIsFocused } from '@react-navigation/native'; // Import this
+import { useIsFocused } from '@react-navigation/native';
+import * as api from '../../api';
+import { icons } from '../../constants';
 
 import Constants from 'expo-constants';
 const { googleMapsApiKey } = Constants.expoConfig.extra;
+
+const screenWidth = Dimensions.get('window').width;
 
 const MIN_LATITUDE_DELTA = 0.016;
 const MIN_LONGITUDE_DELTA = 0.016;
@@ -20,13 +24,103 @@ const initialRegion = {
   longitudeDelta: MIN_LONGITUDE_DELTA,
 };
 
+const categories = [
+  { title: 'Outdoor', icon: icons.outdoor },
+  { title: 'Culture', icon: icons.culture },
+  { title: 'Charity', icon: icons.charity },
+  { title: 'Dining', icon: icons.dining },
+  { title: 'Arts', icon: icons.arts },
+  { title: 'Sports', icon: icons.sports },
+  { title: 'Travel', icon: icons.travel },
+  { title: 'Workout', icon: icons.workout },
+  { title: 'Hobbies', icon: icons.hobbies },
+  { title: 'Tech', icon: icons.tech },
+  { title: 'Seminar', icon: icons.seminar },
+  { title: 'Pets', icon: icons.pets },
+  { title: 'Science', icon: icons.science },
+  { title: 'Tabletop', icon: icons.boardGames },
+  { title: 'Cosplay', icon: icons.cosplay },
+  { title: 'Garden', icon: icons.gardening }
+];
+
 const Discover = ({ navigation }) => {
+  const [user, setUser] = useState(null);
   const [locationPermission, setLocationPermission] = useState(false);
   const [region, setRegion] = useState(initialRegion);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [selectedAddress, setSelectedAddress] = useState(null);
   const [userAddresses, setUserAddresses] = useState(null);
   const searchRef = useRef(null);
   const isFocused = useIsFocused(); // Use this to detect if screen is focused
+  const [sessions, setSessions] = useState([]);
+  const [sessionsWithCategory, setSessionsWithCategory] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [selectedSessionCard, setSelectedSessionCard] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try{
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
+      } catch (error) {
+        console.error('Failed to load user from storage:', error);
+      }
+    };
+    fetchUserData();
+  }, []);
+
+  useEffect(() => {
+    if (isFocused) {
+      const fetchActiveSessions = async () => {
+        try {
+          const response = await api.event.getAllActiveSessions();
+          setSessions(response.data);
+        } catch (error) {
+          console.error('Failed to fetch active sessions:', error);
+        }
+      };
+
+      fetchActiveSessions();
+  }
+  }, [isFocused]);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      if (!sessions || sessions.length === 0) {
+        return;
+      }
+      try {
+        const updatedSessions = await Promise.all(
+          sessions.map(async (session) => {
+            if(session.category){
+              return session;
+            }
+            // console.log('Fetching event:', session.eventId);
+            const response = await api.event.getEventByEventId(session.eventId);
+            const event = response.data;
+
+            // console.log('Session:', session);
+
+            // Return the session with the event category added
+            return {
+              ...session,
+              category: event.category, // Assuming event has a `category` field
+            };
+          })
+        );
+
+        // Update sessions with the new category field
+        // setSessions(updatedSessions);
+        setSessionsWithCategory(updatedSessions); // Avoid using original sessions array in flatlist to prevent re-rendering
+      } catch (error) {
+        console.error('Failed to fetch events:', error);
+      }
+    };
+
+    fetchEvents();
+  }, [sessions]);
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -82,6 +176,62 @@ const Discover = ({ navigation }) => {
     }
   }, [isFocused]); // Run when the screen becomes focused
 
+
+  const RenderSessionCard = React.memo(({ item }) => {
+    const category = categories.find(cat => cat.title === item.category);
+    const formattedDate = new Date(item.startTime * 1000).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'Asia/Kuala_Lumpur' });
+    const formattedTime = new Date(item.startTime * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' });
+    return (
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={() => {
+          setSelectedSessionCard(item.sessionId);
+          setRegion({
+            latitude: item.location.lat,
+            longitude: item.location.lng,
+            latitudeDelta: MIN_LATITUDE_DELTA,
+            longitudeDelta: MIN_LONGITUDE_DELTA
+          });
+          setSelectedLocation({ latitude: item.location.lat, longitude: item.location.lng });
+          setSelectedAddress(item.location.fullAddress);
+        }}
+      >
+        <View style={[
+            styles.eventCard, 
+            selectedSessionCard === item.sessionId && { borderWidth: 4, padding: 8},
+        ]}>
+          <View className="flex-row items-start justify-between p-1 space-x-2">
+            <View className="flex-1 flex-col justify-between h-full">
+              <View>
+                <Text className="text-base font-pbold text-secondary" numberOfLines={1}>{formattedDate} • {formattedTime}</Text>
+                <Text className="text-base font-psemibold" numberOfLines={2}>{item.sessionName}</Text>
+                <Text className="text-base font-pregular text-gray-500" numberOfLines={1}>{item.sessionDesc}</Text>
+              </View>
+              <View>
+                <Text className="text-sm font-regular">{item.location.region? item.location.region : item.location.city}</Text>
+                <Text className="text-sm font-regular">{item.participants ? item.participants.length : 0} attendee(s)</Text>
+              </View>
+            </View>
+            <View className="flex-col items-end justify-between h-full">
+              <View className="flex-col items-center">
+                <Image source={category.icon} style={{ width: 50, height: 50 }} tintColor={'#5e40b7'}/>
+                <Text className="mt-2 font-pblack text-secondary">{item.category}</Text>
+              </View>
+              <View className="flex-col items-center px-0">
+                <TouchableOpacity>
+                  <Image source={icons.maximize} style={{ width: 25, height: 25 }} tintColor={'#5e40b7'}/>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  }, (prevProps, nextProps) => {
+    return prevProps.item === nextProps.item;
+  });
+
+
   const handleLocationSelect = (data, details) => {
     const { lat, lng } = details.geometry.location;
     const newRegion = {
@@ -93,6 +243,7 @@ const Discover = ({ navigation }) => {
     setRegion(newRegion);
     setSelectedLocation({ latitude: lat, longitude: lng });
 
+    setSelectedAddress(data.description);
     const addressComponents = details.address_components;
     const sublocality_level_1 = addressComponents.find(component =>
       component.types.includes('sublocality_level_1')
@@ -152,10 +303,26 @@ const Discover = ({ navigation }) => {
           maxZoomLevel={15}
         >
           {selectedLocation && (
-            <Marker coordinate={selectedLocation} title='Selected Location' />
+            <Marker coordinate={selectedLocation} title={selectedAddress ? selectedAddress : 'default address'} />
           )}
         </MapView>
       )}
+
+      <View style={styles.horizontalScrollContainer}>
+        <FlatList
+          horizontal
+          data={sessionsWithCategory} // // Avoid using original sessions array in flatlist to prevent re-rendering
+          renderItem={({ item }) => <RenderSessionCard item={item} />}
+          keyExtractor={(item) => item.sessionId.toString()}
+          showsHorizontalScrollIndicator={false}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={10}
+          getItemLayout={(data, index) => (
+            { length: 180, offset: 180 * index, index }
+          )}
+        />
+      </View>
     </View>
   );
 };
@@ -221,6 +388,23 @@ const styles = StyleSheet.create({
     right: 1,
     bottom: 1,
   },
+  horizontalScrollContainer: {
+    position: 'absolute',
+    bottom: 60,
+    width: '100%',
+    paddingHorizontal: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0)',
+  },
+  eventCard: {
+    backgroundColor: '#fecc1d',
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#836eca',
+    marginRight: 10,
+    width: screenWidth - 60,
+    height: 180,
+  }
 });
 
 export default Discover;
