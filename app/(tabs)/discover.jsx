@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { View, Image, TouchableOpacity, Text, StyleSheet, ScrollView, FlatList, Dimensions, Platform, PermissionsAndroid } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
 import * as api from '../../api';
 import { icons } from '../../constants';
+import { images } from '../../constants';
 
 import Constants from 'expo-constants';
 const { googleMapsApiKey } = Constants.expoConfig.extra;
@@ -46,14 +47,14 @@ const categories = [
 const Discover = ({ navigation }) => {
   const [user, setUser] = useState(null);
   const [locationPermission, setLocationPermission] = useState(false);
-  const [region, setRegion] = useState(initialRegion);
+  const [region, setRegion] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [userAddresses, setUserAddresses] = useState(null);
   const searchRef = useRef(null);
   const isFocused = useIsFocused(); // Use this to detect if screen is focused
   const [sessions, setSessions] = useState([]);
-  const [sessionsWithCategory, setSessionsWithCategory] = useState([]);
+  // const [sessionsWithCategory, setSessionsWithCategory] = useState([]);
   const [events, setEvents] = useState([]);
   const [selectedSessionCard, setSelectedSessionCard] = useState(null);
 
@@ -86,41 +87,41 @@ const Discover = ({ navigation }) => {
   }
   }, [isFocused]);
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      if (!sessions || sessions.length === 0) {
-        return;
-      }
-      try {
-        const updatedSessions = await Promise.all(
-          sessions.map(async (session) => {
-            if(session.category){
-              return session;
-            }
-            // console.log('Fetching event:', session.eventId);
-            const response = await api.event.getEventByEventId(session.eventId);
-            const event = response.data;
+  // useEffect(() => {
+  //   const fetchEvents = async () => {
+  //     if (!sessions || sessions.length === 0) {
+  //       return;
+  //     }
+  //     try {
+  //       const updatedSessions = await Promise.all(
+  //         sessions.map(async (session) => {
+  //           if(session.category){
+  //             return session;
+  //           }
+  //           // console.log('Fetching event:', session.eventId);
+  //           const response = await api.event.getEventByEventId(session.eventId);
+  //           const event = response.data;
 
-            // console.log('Session:', session);
+  //           // console.log('Session:', session);
 
-            // Return the session with the event category added
-            return {
-              ...session,
-              category: event.category, // Assuming event has a `category` field
-            };
-          })
-        );
+  //           // Return the session with the event category added
+  //           return {
+  //             ...session,
+  //             category: event.category, // Assuming event has a `category` field
+  //           };
+  //         })
+  //       );
 
-        // Update sessions with the new category field
-        // setSessions(updatedSessions);
-        setSessionsWithCategory(updatedSessions); // Avoid using original sessions array in flatlist to prevent re-rendering
-      } catch (error) {
-        console.error('Failed to fetch events:', error);
-      }
-    };
+  //       // Update sessions with the new category field
+  //       // setSessions(updatedSessions);
+  //       setSessionsWithCategory(updatedSessions); // Avoid using original sessions array in flatlist to prevent re-rendering
+  //     } catch (error) {
+  //       console.error('Failed to fetch events:', error);
+  //     }
+  //   };
 
-    fetchEvents();
-  }, [sessions]);
+  //   fetchEvents();
+  // }, [sessions]);
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -146,7 +147,7 @@ const Discover = ({ navigation }) => {
     // This effect runs every time the screen comes into focus
     if (isFocused) {
       clearSearch(); // Clear search input
-      setRegion(initialRegion); // Reset region to the initial one
+      setRegion(null); // Reset region to the initial one
       setSelectedAddress(null); // Clear selected address
       setSelectedSessionCard(null); // Clear selected session card
       setSelectedLocation(null); // Clear selected location
@@ -272,6 +273,48 @@ const Discover = ({ navigation }) => {
     setRegion(restrictedRegion);
   };
 
+  const SessionMarker = React.memo(({ session, index, selectedSessionCard }) => {
+    if (selectedSessionCard === session.sessionId) {
+      return null; // Skip rendering this session marker if it matches the selected location
+    }
+
+    // console.log('Rendering session marker:', session.sessionId);
+  
+    const sessionLat = session.location.lat;
+    const sessionLng = session.location.lng;
+  
+    const offsetLat = sessionLat + index * 0.00005;
+    const offsetLng = sessionLng + index * 0.00005;
+  
+    const coordinate = useMemo(() => ({
+      latitude: offsetLat,
+      longitude: offsetLng,
+    }), [offsetLat, offsetLng]);
+  
+    const handlePress = useCallback(() => {
+      console.log('Session marker pressed:', session.sessionId);
+    }, [session.sessionId]);
+  
+    return (
+      <Marker
+        key={session.sessionId}
+        coordinate={coordinate}
+        title={session.sessionName}
+        description={session.sessionDesc}
+        onPress={handlePress}
+      >
+        <Image source={icons.flag} style={{ width: 30, height: 30 }} />
+      </Marker>
+    );
+  }, (prevProps, nextProps) => {
+    return (
+      prevProps.session === nextProps.session &&
+      prevProps.index === nextProps.index &&
+      prevProps.selectedSessionCard === nextProps.selectedSessionCard
+    );
+  });
+  
+
   return (
     <View style={styles.container}>
       <GooglePlacesAutocomplete 
@@ -307,39 +350,22 @@ const Discover = ({ navigation }) => {
           {selectedLocation && (
             <Marker coordinate={selectedLocation} title={selectedAddress ? selectedAddress : 'default address'} />
           )}
-          {sessionsWithCategory.map((session, index) => {
-            const sessionLat = session.location.lat;
-            const sessionLng = session.location.lng;
+         {sessions.map((session, index) => (
+            <SessionMarker
+              key={session.sessionId}
+              session={session}
+              index={index}
+              selectedSessionCard={selectedSessionCard}
+            />
+          ))}
 
-            const offsetLat = sessionLat + index * 0.00005;
-            const offsetLng = sessionLng + index * 0.00005; 
-
-            if ( selectedSessionCard === session.sessionId) {
-              // Skip rendering this session marker if it matches the selected location
-              return null;
-            }
-
-            return (
-                <Marker
-                  key={session.sessionId}
-                  coordinate={{ latitude: offsetLat, longitude: offsetLng }}
-                  title={session.sessionName}
-                  description={session.sessionDesc}
-                  onPress={() => {
-                    console.log('Session marker pressed:', session.sessionId);
-                  }}
-                >
-                  <Image source={icons.flag} style={{ width: 30, height: 30 }} />
-                </Marker>
-            );
-          })}
         </MapView>
       )}
 
       <View style={styles.horizontalScrollContainer}>
         <FlatList
           horizontal
-          data={sessionsWithCategory} // // Avoid using original sessions array in flatlist to prevent re-rendering
+          data={sessions} // // Avoid using original sessions array in flatlist to prevent re-rendering
           renderItem={({ item }) => <RenderSessionCard item={item} />}
           keyExtractor={(item) => item.sessionId.toString()}
           showsHorizontalScrollIndicator={false}

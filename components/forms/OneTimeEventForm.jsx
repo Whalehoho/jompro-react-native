@@ -181,6 +181,7 @@ const OneTimeEventForm = ({ onSubmit }) => {
         eventId: eventId,
         sessionName: form.eventName,
         sessionDesc: form.eventDescription,
+        category: form.category,
         organizerId: user.accountId,
         status: 'active',
         startTime: eventDate,

@@ -192,6 +192,7 @@ const NewSessionForm = ({ onSubmit }) => {
         eventId: eventId,
         sessionName: form.sessionName,
         sessionDesc: form.sessionDescription,
+        category: form.event.category,
         organizerId: user.accountId,
         status: 'active',
         startTime: sessionDate,
