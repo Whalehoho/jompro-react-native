@@ -147,6 +147,8 @@ const Discover = ({ navigation }) => {
     if (isFocused) {
       clearSearch(); // Clear search input
       setRegion(initialRegion); // Reset region to the initial one
+      setSelectedAddress(null); // Clear selected address
+      setSelectedSessionCard(null); // Clear selected session card
       setSelectedLocation(null); // Clear selected location
 
       const fetchUserAddresses = async () => {
@@ -198,7 +200,7 @@ const Discover = ({ navigation }) => {
       >
         <View style={[
             styles.eventCard, 
-            selectedSessionCard === item.sessionId && { borderWidth: 4, padding: 8},
+            selectedSessionCard === item.sessionId && { borderWidth: 4, padding: 8, borderColor: '#5e40b7' },
         ]}>
           <View className="flex-row items-start justify-between p-1 space-x-2">
             <View className="flex-1 flex-col justify-between h-full">
@@ -300,11 +302,37 @@ const Discover = ({ navigation }) => {
           region={region}
           showsUserLocation={true}
           showsMyLocationButton={true}
-          maxZoomLevel={15}
+          maxZoomLevel={20}
         >
           {selectedLocation && (
             <Marker coordinate={selectedLocation} title={selectedAddress ? selectedAddress : 'default address'} />
           )}
+          {sessionsWithCategory.map((session, index) => {
+            const sessionLat = session.location.lat;
+            const sessionLng = session.location.lng;
+
+            const offsetLat = sessionLat + index * 0.00005;
+            const offsetLng = sessionLng + index * 0.00005; 
+
+            if ( selectedSessionCard === session.sessionId) {
+              // Skip rendering this session marker if it matches the selected location
+              return null;
+            }
+
+            return (
+                <Marker
+                  key={session.sessionId}
+                  coordinate={{ latitude: offsetLat, longitude: offsetLng }}
+                  title={session.sessionName}
+                  description={session.sessionDesc}
+                  onPress={() => {
+                    console.log('Session marker pressed:', session.sessionId);
+                  }}
+                >
+                  <Image source={icons.flag} style={{ width: 30, height: 30 }} />
+                </Marker>
+            );
+          })}
         </MapView>
       )}
 

@@ -51,6 +51,7 @@ import age from "../assets/icons/age.png";
 import approved from "../assets/icons/approved.png";
 import event from "../assets/icons/event.png";
 import maximize from "../assets/icons/maximize.png";
+import flag from "../assets/icons/flag.png";
 
 export default {
   play,
@@ -106,4 +107,5 @@ export default {
   approved,
   event,
   maximize,
+  flag,
 };
