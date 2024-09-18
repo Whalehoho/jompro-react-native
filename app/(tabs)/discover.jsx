@@ -49,18 +49,14 @@ const Discover = ({ navigation }) => {
   const [locationPermission, setLocationPermission] = useState(false);
   const mapRef = useRef(null);
   const [region, setRegion] = useState(null);
-  const [delta, setDelta] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedAddress, setSelectedAddress] = useState(null);
-  const [userAddresses, setUserAddresses] = useState(null);
+  const [userAddresses, setUserAddresses] = useState(null);  // In future, can use to fetch user nearby events, etc.
   const searchRef = useRef(null);
   const flatListRef = useRef(null);
   const isFocused = useIsFocused(); // Use this to detect if screen is focused
   const [sessions, setSessions] = useState([]);
-  // const [sessionsWithCategory, setSessionsWithCategory] = useState([]);
-  const [events, setEvents] = useState([]);
   const [selectedSessionCard, setSelectedSessionCard] = useState(null);
-  // const [selectedSessionFlag, setSelectedSessionFlag] = useState(null); // Removed as per modification
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -90,42 +86,6 @@ const Discover = ({ navigation }) => {
       fetchActiveSessions();
     }
   }, [isFocused]);
-
-  // useEffect(() => {
-  //   const fetchEvents = async () => {
-  //     if (!sessions || sessions.length === 0) {
-  //       return;
-  //     }
-  //     try {
-  //       const updatedSessions = await Promise.all(
-  //         sessions.map(async (session) => {
-  //           if(session.category){
-  //             return session;
-  //           }
-  //           // console.log('Fetching event:', session.eventId);
-  //           const response = await api.event.getEventByEventId(session.eventId);
-  //           const event = response.data;
-
-  //           // console.log('Session:', session);
-
-  //           // Return the session with the event category added
-  //           return {
-  //             ...session,
-  //             category: event.category, // Assuming event has a category field
-  //           };
-  //         })
-  //       );
-
-  //       // Update sessions with the new category field
-  //       // setSessions(updatedSessions);
-  //       setSessionsWithCategory(updatedSessions); // Avoid using original sessions array in flatlist to prevent re-rendering
-  //     } catch (error) {
-  //       console.error('Failed to fetch events:', error);
-  //     }
-  //   };
-
-  //   fetchEvents();
-  // }, [sessions]);
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -200,21 +160,13 @@ const Discover = ({ navigation }) => {
         activeOpacity={1}
         onPress={() => {
           setSelectedSessionCard(item.sessionId);
-          // setSelectedSessionFlag(null); // Removed as per modification
-          // console.log('delta:', delta);
-          // setRegion({
-          //   latitude: item.location.lat,
-          //   longitude: item.location.lng,
-          //   latitudeDelta: delta?.latitudeDelta || MIN_LATITUDE_DELTA,
-          //   longitudeDelta: delta?.longitudeDelta || MIN_LONGITUDE_DELTA,
-          // });
           if (mapRef.current) {
             mapRef.current.animateToRegion(
               {
                 latitude: item.location.lat,
                 longitude: item.location.lng,
-                latitudeDelta: delta?.latitudeDelta || MIN_LATITUDE_DELTA,
-                longitudeDelta: delta?.longitudeDelta || MIN_LONGITUDE_DELTA,
+                latitudeDelta: MIN_LATITUDE_DELTA,
+                longitudeDelta: MIN_LONGITUDE_DELTA,
               },
               500 // Duration in milliseconds
             );
@@ -263,8 +215,8 @@ const Discover = ({ navigation }) => {
     const newRegion = {
       latitude: lat,
       longitude: lng,
-      latitudeDelta: delta?.latitudeDelta || MIN_LATITUDE_DELTA,
-      longitudeDelta: delta?.longitudeDelta || MIN_LONGITUDE_DELTA,
+      latitudeDelta: MIN_LATITUDE_DELTA,
+      longitudeDelta: MIN_LONGITUDE_DELTA,
     };
     setRegion(newRegion);
     setSelectedLocation({ latitude: lat, longitude: lng });
@@ -287,22 +239,6 @@ const Discover = ({ navigation }) => {
     setSelectedLocation(null);
   };
 
-  const onRegionChange = (newRegion) => {
-    const restrictedRegion = {
-      ...newRegion,
-      latitudeDelta: Math.max(newRegion.latitudeDelta, MIN_LATITUDE_DELTA),
-      longitudeDelta: Math.max(newRegion.longitudeDelta, MIN_LONGITUDE_DELTA),
-    };
-    setRegion(restrictedRegion);
-  };
-
-  const onRegionChangeComplete = (newRegion) => {
-    const delta = {
-      latitudeDelta: newRegion.latitudeDelta,
-      longitudeDelta: newRegion.longitudeDelta,
-    }
-    setDelta(delta);
-  };
 
   const SessionMarker = React.memo(({ session, index, selectedSessionCard, scrollToSession }) => {
     if (selectedSessionCard === session.sessionId) {
