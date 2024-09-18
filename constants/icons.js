@@ -52,6 +52,7 @@ import approved from "../assets/icons/approved.png";
 import event from "../assets/icons/event.png";
 import maximize from "../assets/icons/maximize.png";
 import flag from "../assets/icons/flag.png";
+import flagRed from "../assets/icons/flag-red.png";
 
 export default {
   play,
@@ -108,4 +109,5 @@ export default {
   event,
   maximize,
   flag,
+  flagRed,
 };

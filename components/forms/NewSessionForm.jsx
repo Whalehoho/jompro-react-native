@@ -216,7 +216,12 @@ const NewSessionForm = ({ onSubmit }) => {
 
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || date;
-    setShowDatePicker(false);
+    if(mode == 'date') {
+      showMode('time');
+      setShowDatePicker(true);
+    } else {
+      setShowDatePicker(false);
+    }
     setDate(currentDate); // Update the date in state
     // setForm({ ...form, sessionDate: currentDate.toLocaleString() }); // Add the selected date to the form state
     setForm({ ...form, sessionDate: currentDate });

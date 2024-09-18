@@ -15,8 +15,8 @@ const { googleMapsApiKey } = Constants.expoConfig.extra;
 
 const screenWidth = Dimensions.get('window').width;
 
-const MIN_LATITUDE_DELTA = 0.016;
-const MIN_LONGITUDE_DELTA = 0.016;
+const MIN_LATITUDE_DELTA = 0.022;
+const MIN_LONGITUDE_DELTA = 0.022;
 
 const initialRegion = {
   latitude: 3.06384,
@@ -47,16 +47,20 @@ const categories = [
 const Discover = ({ navigation }) => {
   const [user, setUser] = useState(null);
   const [locationPermission, setLocationPermission] = useState(false);
+  const mapRef = useRef(null);
   const [region, setRegion] = useState(null);
+  const [delta, setDelta] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [userAddresses, setUserAddresses] = useState(null);
   const searchRef = useRef(null);
+  const flatListRef = useRef(null);
   const isFocused = useIsFocused(); // Use this to detect if screen is focused
   const [sessions, setSessions] = useState([]);
   // const [sessionsWithCategory, setSessionsWithCategory] = useState([]);
   const [events, setEvents] = useState([]);
   const [selectedSessionCard, setSelectedSessionCard] = useState(null);
+  // const [selectedSessionFlag, setSelectedSessionFlag] = useState(null); // Removed as per modification
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -84,7 +88,7 @@ const Discover = ({ navigation }) => {
       };
 
       fetchActiveSessions();
-  }
+    }
   }, [isFocused]);
 
   // useEffect(() => {
@@ -107,7 +111,7 @@ const Discover = ({ navigation }) => {
   //           // Return the session with the event category added
   //           return {
   //             ...session,
-  //             category: event.category, // Assuming event has a `category` field
+  //             category: event.category, // Assuming event has a category field
   //           };
   //         })
   //       );
@@ -179,6 +183,13 @@ const Discover = ({ navigation }) => {
     }
   }, [isFocused]); // Run when the screen becomes focused
 
+  // Function to scroll to a specific session in the FlatList
+  const scrollToSession = useCallback((sessionId) => {
+    const index = sessions.findIndex(session => session.sessionId === sessionId);
+    if (flatListRef.current && index !== -1) {
+      flatListRef.current.scrollToIndex({ index, animated: true });
+    }
+  }, [sessions]);
 
   const RenderSessionCard = React.memo(({ item }) => {
     const category = categories.find(cat => cat.title === item.category);
@@ -189,12 +200,25 @@ const Discover = ({ navigation }) => {
         activeOpacity={1}
         onPress={() => {
           setSelectedSessionCard(item.sessionId);
-          setRegion({
-            latitude: item.location.lat,
-            longitude: item.location.lng,
-            latitudeDelta: MIN_LATITUDE_DELTA,
-            longitudeDelta: MIN_LONGITUDE_DELTA
-          });
+          // setSelectedSessionFlag(null); // Removed as per modification
+          // console.log('delta:', delta);
+          // setRegion({
+          //   latitude: item.location.lat,
+          //   longitude: item.location.lng,
+          //   latitudeDelta: delta?.latitudeDelta || MIN_LATITUDE_DELTA,
+          //   longitudeDelta: delta?.longitudeDelta || MIN_LONGITUDE_DELTA,
+          // });
+          if (mapRef.current) {
+            mapRef.current.animateToRegion(
+              {
+                latitude: item.location.lat,
+                longitude: item.location.lng,
+                latitudeDelta: delta?.latitudeDelta || MIN_LATITUDE_DELTA,
+                longitudeDelta: delta?.longitudeDelta || MIN_LONGITUDE_DELTA,
+              },
+              500 // Duration in milliseconds
+            );
+          }
           setSelectedLocation({ latitude: item.location.lat, longitude: item.location.lng });
           setSelectedAddress(item.location.fullAddress);
         }}
@@ -234,14 +258,13 @@ const Discover = ({ navigation }) => {
     return prevProps.item === nextProps.item;
   });
 
-
   const handleLocationSelect = (data, details) => {
     const { lat, lng } = details.geometry.location;
     const newRegion = {
       latitude: lat,
       longitude: lng,
-      latitudeDelta: MIN_LATITUDE_DELTA,
-      longitudeDelta: MIN_LONGITUDE_DELTA
+      latitudeDelta: delta?.latitudeDelta || MIN_LATITUDE_DELTA,
+      longitudeDelta: delta?.longitudeDelta || MIN_LONGITUDE_DELTA,
     };
     setRegion(newRegion);
     setSelectedLocation({ latitude: lat, longitude: lng });
@@ -273,7 +296,15 @@ const Discover = ({ navigation }) => {
     setRegion(restrictedRegion);
   };
 
-  const SessionMarker = React.memo(({ session, index, selectedSessionCard }) => {
+  const onRegionChangeComplete = (newRegion) => {
+    const delta = {
+      latitudeDelta: newRegion.latitudeDelta,
+      longitudeDelta: newRegion.longitudeDelta,
+    }
+    setDelta(delta);
+  };
+
+  const SessionMarker = React.memo(({ session, index, selectedSessionCard, scrollToSession }) => {
     if (selectedSessionCard === session.sessionId) {
       return null; // Skip rendering this session marker if it matches the selected location
     }
@@ -293,7 +324,11 @@ const Discover = ({ navigation }) => {
   
     const handlePress = useCallback(() => {
       console.log('Session marker pressed:', session.sessionId);
-    }, [session.sessionId]);
+      // Delay to allow callout to display
+      setTimeout(() => {
+        scrollToSession(session.sessionId);
+      }, 300);
+    }, [session.sessionId, scrollToSession]);
   
     return (
       <Marker
@@ -313,7 +348,8 @@ const Discover = ({ navigation }) => {
       prevProps.selectedSessionCard === nextProps.selectedSessionCard
     );
   });
-  
+
+  const memoizedSessions = useMemo(() => sessions, [sessions]);
 
   return (
     <View style={styles.container}>
@@ -328,6 +364,7 @@ const Discover = ({ navigation }) => {
         }}
         fetchDetails={true}
         styles={styles.SearchBar}
+        debounce={300}
       />
       <TouchableOpacity
         style={styles.clearButton}
@@ -338,6 +375,7 @@ const Discover = ({ navigation }) => {
       {locationPermission && (
         <MapView
           provider={PROVIDER_GOOGLE}
+          ref={mapRef}
           style={styles.mapStyle}
           zoomEnabled={true}
           scrollEnabled={true}
@@ -346,16 +384,20 @@ const Discover = ({ navigation }) => {
           showsUserLocation={true}
           showsMyLocationButton={true}
           maxZoomLevel={20}
+          // onRegionChangeComplete={onRegionChangeComplete}
         >
           {selectedLocation && (
-            <Marker coordinate={selectedLocation} title={selectedAddress ? selectedAddress : 'default address'} />
+            <Marker coordinate={selectedLocation} title={selectedAddress ? selectedAddress : 'default address'} >
+              <Image source={icons.flagRed} style={{ width: 40, height: 40 }} />
+            </Marker>
           )}
-         {sessions.map((session, index) => (
+          {memoizedSessions.map((session, index) => (
             <SessionMarker
               key={session.sessionId}
               session={session}
               index={index}
               selectedSessionCard={selectedSessionCard}
+              scrollToSession={scrollToSession}
             />
           ))}
 
@@ -364,16 +406,17 @@ const Discover = ({ navigation }) => {
 
       <View style={styles.horizontalScrollContainer}>
         <FlatList
+          ref={flatListRef}
           horizontal
-          data={sessions} // // Avoid using original sessions array in flatlist to prevent re-rendering
+          data={sessions} // Avoid using original sessions array in flatlist to prevent re-rendering
           renderItem={({ item }) => <RenderSessionCard item={item} />}
           keyExtractor={(item) => item.sessionId.toString()}
           showsHorizontalScrollIndicator={false}
           initialNumToRender={10}
           maxToRenderPerBatch={10}
-          windowSize={10}
+          windowSize={21}
           getItemLayout={(data, index) => (
-            { length: 180, offset: 180 * index, index }
+            { length: screenWidth - 60, offset: (screenWidth-60) * index, index }
           )}
         />
       </View>
