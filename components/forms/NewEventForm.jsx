@@ -42,12 +42,12 @@ const genderRestrictions = ['No restrictions', 'Male', 'Female'];
 
 const ageRestrictions = ['No restrictions', 'Adult (18-50)', 'Senior (50+)'];
 
-const NewSessionForm = ({ onSubmit }) => {
+const NewEventForm = ({ onSubmit }) => {
   const [form, setForm] = useState({
-    event: null,
-    sessionName: '',
-    sessionDescription: '',
-    sessionDate: null,
+    channel: null,
+    eventName: '',
+    eventDescription: '',
+    eventDate: null,
     duration: '',
     participants: '1',
     location: null,
@@ -57,7 +57,7 @@ const NewSessionForm = ({ onSubmit }) => {
   });
 
   const [user, setUser] = useState(null);
-  const [myEvents, setMyEvents] = useState([]);
+  const [mySubscribedChannels, setMySubscribedChannels] = useState([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -74,26 +74,36 @@ const NewSessionForm = ({ onSubmit }) => {
   }, []);
 
   useEffect(() => {
-    const fetchMyEvents = async () => {
+    const fetchMySubscribedChannels = async () => {
         try{
-            const response = await api.event.getMyEvents(user.accountId, 'active');
-            // console.log('My events:', response.data);
-            setMyEvents(response.data);
+            const subscribed = await api.subscription.getMySubscribed(user.accountId);
+            const channelIds = subscribed.data.map(sub => sub.channelId);
+            // Create an array to hold the channel responses
+            const channels = [];
+
+            // Call API one by one for each channelId
+            for (const channelId of channelIds) {
+                const channel = await api.channel.getChannelByChannelId(channelId);
+                channels.push(channel.data); // Push each channel response to the array
+            }
+            const myCreatedChannels = await api.channel.getChannelsByOwnerId(user.accountId);
+            channels.push(...myCreatedChannels.data);
+            setMySubscribedChannels(channels);
         } catch (error) {
             // console.error('Failed to fetch events:', error);
         }
     };
-    fetchMyEvents();
+    fetchMySubscribedChannels();
   }, [user]); // Fetch events when user state changes
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Modal states for event selection
-  const [showEventModal, setShowEventModal] = useState(false);
+  const [showChannelModal, setShowChannelModal] = useState(false);
 
-  const handleEventSelect = (selectedEvent) => {
-    setForm({ ...form, event: selectedEvent });
-    setShowEventModal(false);
+  const handleChannelSelect = (selectedChannel) => {
+    setForm({ ...form, channel: selectedChannel });
+    setShowChannelModal(false);
   };
 
   // DateTimePicker states
@@ -174,8 +184,8 @@ const NewSessionForm = ({ onSubmit }) => {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    if(!form || !form.event || !form.sessionName || !form.sessionDescription 
-        || !form.sessionDate || !form.duration 
+    if(!form || !form.channel || !form.eventName || !form.eventDescription 
+        || !form.eventDate || !form.duration 
         || !form.participants || !form.location || !form.genderRestriction 
         || !form.ageRestriction) {
             Alert.alert('Please fill in all fields');
@@ -184,18 +194,18 @@ const NewSessionForm = ({ onSubmit }) => {
     }
 
     try{
-      const sessionDate = new Date(form.sessionDate).getTime() / 1000;
+      const eventDate = new Date(form.eventDate).getTime() / 1000;
       const duration = convertDurationToSeconds(form.duration);
       const ageRestriction = parseAgeRestriction(form.ageRestriction);
-      const eventId = form.event.eventId;
-      await api.event.updateSession({
-        eventId: eventId,
-        sessionName: form.sessionName,
-        sessionDesc: form.sessionDescription,
-        category: form.event.category,
+      const channelId = form.channel.channelId;
+      await api.event.createEvent({
+        channelId: channelId,
+        eventName: form.eventName,
+        eventAbout: form.eventDescription,
+        category: form.channel.category,
         organizerId: user.accountId,
         status: 'active',
-        startTime: sessionDate,
+        startTime: eventDate,
         duration: duration,
         location: form.location,
         maxParticipants: parseInt(form.participants, 10),
@@ -203,7 +213,7 @@ const NewSessionForm = ({ onSubmit }) => {
         ageRestriction: ageRestriction,
         autoApprove: form.autoApprove,
       });
-      Alert.alert('Success', 'Session created successfully');
+      Alert.alert('Success', 'Event created successfully');
     } catch (error) {
       if (!error.response || error.response.status !== 401) {
         Alert.alert('Error', error.message || 'Something went wrong');
@@ -223,8 +233,8 @@ const NewSessionForm = ({ onSubmit }) => {
       setShowDatePicker(false);
     }
     setDate(currentDate); // Update the date in state
-    // setForm({ ...form, sessionDate: currentDate.toLocaleString() }); // Add the selected date to the form state
-    setForm({ ...form, sessionDate: currentDate });
+    // setForm({ ...form, eventDate: currentDate.toLocaleString() }); // Add the selected date to the form state
+    setForm({ ...form, eventDate: currentDate });
   };
 
   const showMode = (currentMode) => {
@@ -258,15 +268,15 @@ const NewSessionForm = ({ onSubmit }) => {
 
   return (
     <View className="px-2 py-2">
-      <Text className="font-pbold text-xl mb-8 text-center">CREATE A NEW SESSION</Text>
+      <Text className="font-pbold text-xl mb-8 text-center">Ready to host your own event?</Text>
 
-      <Text className="font-pmedium text-sm text-gray-500">EVENT</Text>
+      <Text className="font-pmedium text-sm text-gray-800">CHANNEL</Text>
 
-      <TouchableOpacity onPress={() => setShowEventModal(true)}>
+      <TouchableOpacity onPress={() => setShowChannelModal(true)}>
           <View className="flex-row space-x-4 mt-4">
             <Image source={icons.event} className="w-6 h-6" tintColor={'#5e40b7'} />
             <Text className="font-pregular text-base">
-              {form.event ? `${form.event.eventName}` : 'Select From My Events'}
+              {form.channel ? `${form.channel.channelName}` : 'Choose the right channel'}
             </Text>
           </View>
         </TouchableOpacity>
@@ -274,14 +284,14 @@ const NewSessionForm = ({ onSubmit }) => {
 
       <View style={styles.separator} className="mt-8 mb-0" />
 
-      <Text className="font-pmedium text-sm text-gray-500 mt-8">SESSION DETAILS</Text>
+      <Text className="font-pmedium text-sm text-gray-800 mt-8">EVENT DETAILS</Text>
 
       <View className="flex-col items-start justify-center mt-4 space-y-4">
         <TouchableOpacity onPress={() => showMode('date')}>
           <View className="flex-row space-x-4">
             <Image source={icons.calendar} className="w-6 h-6" tintColor={'#5e40b7'} />
             <Text className="font-pregular text-base">
-              {form.sessionDate ? `${form.sessionDate}` : 'Select Date and Time'}
+              {form.eventDate ? `${form.eventDate}` : 'Select Date and Time'}
             </Text>
           </View>
         </TouchableOpacity>
@@ -301,7 +311,7 @@ const NewSessionForm = ({ onSubmit }) => {
             }}
         >
           <View className="flex-row space-x-4">
-            <Image source={icons.pin} className="w-6 h-6" tintColor={'#5e40b7'} />
+          <Image source={icons.pin} className="w-6 h-6" tintColor={'#5e40b7'} />
             <Text className="font-pregular text-base">
                 {selectedAddress ? `${selectedAddress.fullAddress}` : 'Select Location'}
             </Text>
@@ -310,7 +320,7 @@ const NewSessionForm = ({ onSubmit }) => {
 
         {/* Number of Participants Input */}
         <View className="flex-row items-center space-x-4">
-            <Image source={icons.people} className="w-6 h-6" tintColor={'#5e40b7'} />
+        <Image source={icons.people} className="w-6 h-6" tintColor={'#5e40b7'} />
             <Text className="font-pregular text-base mr-6">Participants</Text>
 
             <View className="flex-row items-center space-x-4">
@@ -334,15 +344,15 @@ const NewSessionForm = ({ onSubmit }) => {
 
       <View style={styles.separator} className="mt-8 mb-0" />
 
-      <Text className="font-pmedium text-sm text-gray-500 mt-8">SESSION NAME</Text>
+      <Text className="font-pmedium text-sm text-gray-800 mt-8">EVENT NAME</Text>
 
 
 
       <FormField
         title=""
-        value={form.sessionName}
-        handleChangeText={(text) => setForm({ ...form, sessionName: text })}
-        placeholder="Add Session Name"
+        value={form.eventName}
+        handleChangeText={(text) => setForm({ ...form, eventName: text })}
+        placeholder="Add Event Name"
         titleStyle="text-black"
         boxStyle="border-gray-200 bg-gray-200 rounded-sm h-14 px-4"
         otherStyles="mt-5 space-y-1"
@@ -351,8 +361,8 @@ const NewSessionForm = ({ onSubmit }) => {
 
       <FormField
          title=""
-         value={form.sessionDescription}
-         handleChangeText={(text) => setForm({ ...form, sessionDescription: text })}
+         value={form.eventDescription}
+         handleChangeText={(text) => setForm({ ...form, eventDescription: text })}
          multiLine={true}
          placeholder="Add Notes or Description"
          titleStyle="text-black"
@@ -362,12 +372,12 @@ const NewSessionForm = ({ onSubmit }) => {
       
       <View style={styles.separator} className="mt-8 mb-0" />
 
-      <Text className="font-pmedium text-sm text-gray-500 mt-8">ADVANCED</Text>
+      <Text className="font-pmedium text-sm text-gray-800 mt-8">ADVANCED</Text>
 
       <View className="flex-col items-start justify-center mt-4 space-y-4">
       <TouchableOpacity onPress={() => setShowGenderModal(true)}>
           <View className="flex-row space-x-4">
-            <Image source={icons.gender} className="w-6 h-6" tintColor={'#5e40b7'} />
+          <Image source={icons.gender} className="w-6 h-6" tintColor={'#5e40b7'} />
             <Text className="font-pregular text-base">
               {form.genderRestriction ? `${form.genderRestriction}` : 'Gender Restriction'}
             </Text>
@@ -376,7 +386,7 @@ const NewSessionForm = ({ onSubmit }) => {
 
         <TouchableOpacity onPress={() => setShowAgeModal(true)}>
           <View className="flex-row space-x-4">
-            <Image source={icons.age} className="w-6 h-6" tintColor={'#5e40b7'} />
+          <Image source={icons.age} className="w-6 h-6" tintColor={'#5e40b7'} />
             <Text className="font-pregular text-base">
               {form.ageRestriction ? `${form.ageRestriction}` : 'Age Group'}
             </Text>
@@ -384,7 +394,7 @@ const NewSessionForm = ({ onSubmit }) => {
         </TouchableOpacity>
 
         <View className="flex-row space-x-4">
-            <Image source={icons.approved} className="w-6 h-6" tintColor={'#5e40b7'} />
+        <Image source={icons.approved} className="w-6 h-6" tintColor={'#5e40b7'} />
             <Text className="font-pregular text-base mr-28">
               Auto-approve
             </Text>
@@ -399,31 +409,31 @@ const NewSessionForm = ({ onSubmit }) => {
 
       </View>
 
-    {/* Modal for selecting event */}
-    <Modal visible={showEventModal} transparent={true} animationType="slide">
+    {/* Modal for selecting channel */}
+    <Modal visible={showChannelModal} transparent={true} animationType="slide">
         <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
             <FlatList
-                data={myEvents}
-                keyExtractor={(item) => item.eventId.toString()}
+                data={mySubscribedChannels}
+                keyExtractor={(item) => item.channelId.toString()}
                 renderItem={({ item }) => {
                 // Find the matching category from your categories array
-                const eventCategory = categories.find(
+                const channelCategory = categories.find(
                     (category) => category.title === item.category
                 );
-                const eventIcon = eventCategory ? eventCategory.icon : null;
+                const channelIcon = channelCategory ? channelCategory.icon : null;
 
                 return (
                     <TouchableOpacity
                         style={styles.modalItem}
-                        onPress={() => handleEventSelect(item)}
+                        onPress={() => handleChannelSelect(item)}
                     >
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             {/* Icon on the left */}
-                            {eventIcon && (
+                            {channelIcon && (
                                 <View style={{ flex: 0 }}>
                                 <Image
-                                    source={eventIcon}
+                                    source={channelIcon}
                                     style={{ width: 24, height: 24, marginRight: 10 }}
                                 />
                                 </View>
@@ -431,7 +441,7 @@ const NewSessionForm = ({ onSubmit }) => {
                             
                             {/* Event name in the center */}
                             <View style={{ flex: 1, alignItems: 'center' }}>
-                                <Text style={styles.modalItemText}>{item.eventName}</Text>
+                                <Text style={styles.modalItemText}>{item.channelName}</Text>
                             </View>
                         </View>
                     </TouchableOpacity>
@@ -440,7 +450,7 @@ const NewSessionForm = ({ onSubmit }) => {
             />
             <CustomButton
                 title="Close"
-                handlePress={() => setShowEventModal(false)}
+                handlePress={() => setShowChannelModal(false)}
                 containerStyles="w-full mt-7 rounded-md min-h-[48px]"
                 textStyles="text-base"
             />
@@ -588,7 +598,7 @@ const NewSessionForm = ({ onSubmit }) => {
 
       <View className="flex-row items-center justify-center mb-8">
         <CustomButton
-          title="Create Session"
+          title="Upload Event"
           handlePress={handleSubmit}
           containerStyles="w-4/5 mt-7 rounded-md"
           textStyles="text-base"
@@ -599,12 +609,12 @@ const NewSessionForm = ({ onSubmit }) => {
   );
 };
 
-export default NewSessionForm;
+export default NewEventForm;
 
 const styles = StyleSheet.create({
   separator: {
     height: 1,
-    backgroundColor: '#ccc',
+    backgroundColor: '#000',
     marginVertical: 8
   },
   adjustButton: {
@@ -620,10 +630,11 @@ const styles = StyleSheet.create({
   },
   participantInput: {
     borderBottomWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#000',
     width: 50,
     textAlign: 'center',
     fontSize: 16,
+    color: '#000',
   },
   modalContainer: {
     flex: 1,

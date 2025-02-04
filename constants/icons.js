@@ -53,6 +53,8 @@ import event from "../assets/icons/event.png";
 import maximize from "../assets/icons/maximize.png";
 import flag from "../assets/icons/flag.png";
 import flagRed from "../assets/icons/flag-red.png";
+import broadcast from "../assets/icons/broadcast.png";
+import party from "../assets/icons/party.png";
 
 export default {
   play,
@@ -110,4 +112,6 @@ export default {
   maximize,
   flag,
   flagRed,
+  broadcast,
+  party,
 };

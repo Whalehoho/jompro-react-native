@@ -32,11 +32,12 @@ const categories = [
   { title: 'Garden', icon: icons.gardening }
 ];
 
-const RegularEventForm = ({ onSubmit }) => {
+const NewChannelForm = ({ onSubmit }) => {
   const [form, setForm] = useState({
-    eventName: '',
-    eventDescription: '',
+    channelName: '',
+    channelDescription: '',
     category: '',
+    private: false,
   });
 
   const [user, setUser] = useState(null);
@@ -61,22 +62,21 @@ const RegularEventForm = ({ onSubmit }) => {
   const handleSubmit = async () => {
     // console.log('Form data:', form);
     setIsSubmitting(true);
-    if(!form || !form.eventName || !form.eventDescription || !form.category) {
+    if(!form || !form.channelName || !form.channelDescription || !form.category) {
         Alert.alert('Please fill in all fields');
         setIsSubmitting(false);
         return;
     }
 
     try{
-      const response = await api.event.updateEvent({
-        hostId: user.accountId,
+      const response = await api.channel.createChannel({
+        channelName: form.channelName,
+        channelDesc: form.channelDescription,
         category: form.category,
-        eventName: form.eventName,
-        eventDesc: form.eventDescription,
-        pattern: 'regular',
-        status: 'active',
+        privacy: form.private === true ? 'private' : 'public',
+        ownerId: user.accountId,
       });
-      Alert.alert('Success', 'Event created successfully');
+      Alert.alert('Success', 'Channel created successfully');
     } catch (error) {
       if (!error.response || error.response.status !== 401) {
         Alert.alert('Error', error.message || 'Something went wrong');
@@ -89,9 +89,9 @@ const RegularEventForm = ({ onSubmit }) => {
 
   return (
     <View className="px-2 py-2">
-      <Text className="font-pbold text-xl mb-8 text-center">CREATE A REGULAR EVENT</Text>
+      <Text className="font-pbold text-xl mb-8 text-center">Ready to create your own channel?</Text>
 
-      <Text className="font-pmedium text-sm text-gray-500">CATEGORY</Text>
+      <Text className="font-pmedium text-sm text-gray-800">What kind of community are you building? Choose a category that best represents your events and audience!</Text>
 
       {/* Horizontal ScrollView with two rows */}
       <ScrollView
@@ -107,7 +107,7 @@ const RegularEventForm = ({ onSubmit }) => {
               <TouchableOpacity
                 key={index}
                 className={`py-4 px-6 items-center border-2 rounded-lg mx-2 ${
-                  form.category === item.title ? 'bg-primary border-primary' : 'border-gray-300'
+                  form.category === item.title ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800'
                 }`}
                 style={{ width: 120, height: 100 }}
                 onPress={() => setForm({ ...form, category: item.title })}
@@ -125,7 +125,7 @@ const RegularEventForm = ({ onSubmit }) => {
               <TouchableOpacity
                 key={index}
                 className={`py-4 px-6 items-center border-2 rounded-lg mx-2 ${
-                  form.category === item.title ? 'bg-primary border-primary' : 'border-gray-300'
+                  form.category === item.title ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800'
                 }`}
                 style={{ width: 120, height: 100 }}
                 onPress={() => setForm({ ...form, category: item.title })}
@@ -142,15 +142,15 @@ const RegularEventForm = ({ onSubmit }) => {
 
       <View style={styles.separator} className="mt-8 mb-0" />
 
-      <Text className="font-pmedium text-sm text-gray-500 mt-8">EVENT NAME</Text>
+      <Text className="font-pmedium text-sm text-gray-800 mt-8">Give your channel a memorable name & description to capture the spirit of your community!</Text>
 
 
 
       <FormField
         title=""
-        value={form.eventName}
-        handleChangeText={(text) => setForm({ ...form, eventName: text })}
-        placeholder="Add Event Name"
+        value={form.channelName}
+        handleChangeText={(text) => setForm({ ...form, channelName: text })}
+        placeholder="Add Channel Name"
         titleStyle="text-black"
         boxStyle="border-gray-200 bg-gray-200 rounded-sm h-14 px-4"
         otherStyles="mt-5 space-y-1"
@@ -159,18 +159,34 @@ const RegularEventForm = ({ onSubmit }) => {
 
       <FormField
          title=""
-         value={form.eventDescription}
-         handleChangeText={(text) => setForm({ ...form, eventDescription: text })}
+         value={form.channelDescription}
+         handleChangeText={(text) => setForm({ ...form, channelDescription: text })}
          multiLine={true}
-         placeholder="Add Notes or Description"
+         placeholder="Add Description"
          titleStyle="text-black"
          boxStyle="border-gray-200 bg-gray-200 rounded-sm h-48 px-4 py-2 items-start"
          otherStyles="mt-5 space-y-1"
       />
+
+    <View style={styles.separator} className="mt-8 mb-0" />
+
+      <View className="flex-row space-x-4 mt-8">
+                  <Text className="font-pmedium text-base text-gray-800">
+                    Make it private?
+                  </Text>
+                  <Switch
+                     style={{ transform: [{ scaleX: 1.1 }, { scaleY: 1.1 }] }}
+                      trackColor={{ false: "#767577", true: "#7257ca" }}
+                      thumbColor={form.private ? "#836eca" : "#f4f3f4"}
+                      ios_backgroundColor="#3e3e3e"
+                      onValueChange={() => setForm({ ...form, private: !form.private })}
+                      value={form.private}
+                  />
+                </View>
       
       <View className="flex-row items-center justify-center mb-8">
         <CustomButton
-          title="Create Event"
+          title="Create Channel"
           handlePress={handleSubmit}
           containerStyles="w-4/5 mt-7 rounded-md"
           textStyles="text-base"
@@ -181,12 +197,12 @@ const RegularEventForm = ({ onSubmit }) => {
   );
 };
 
-export default RegularEventForm;
+export default NewChannelForm;
 
 const styles = StyleSheet.create({
   separator: {
     height: 1,
-    backgroundColor: '#ccc',
+    backgroundColor: '#000',
     marginVertical: 8
   },
   modalContainer: {

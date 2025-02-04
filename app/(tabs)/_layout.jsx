@@ -6,9 +6,8 @@ import { icons } from '../../constants';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';  // Import BottomSheetBackdrop
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import OneTimeEventForm from '../../components/forms/OneTimeEventForm';
-import RegularEventForm from '../../components/forms/RegularEventForm';
-import NewSessionForm from '../../components/forms/NewSessionForm';
+import NewChannelForm from '../../components/forms/NewChannelForm';
+import NewEventForm from '../../components/forms/NewEventForm';
 
 
 const TabIcon = ({ icon, color, name, focused }) => {
@@ -39,16 +38,16 @@ const BottomSheetContent = ({ handleShowForm, handleCloseForm, showForm }) => {
     >
       { !showForm &&
         <>
-          <TouchableOpacity className="mb-2"onPress={ () => {
-              handleShowForm('regular');
+        <TouchableOpacity className="mt-2 mb-2"onPress={ () => {
+              handleShowForm('new-channel');
           }}>
             <View className="flex-row items-start justify-start">
               <View>
-                <Image source={icons.schedule} className="w-6 h-6" />
+                <Image source={icons.broadcast} className="w-6 h-6" />
               </View>
               <View className="ml-6 flex-shrink">
-                <Text className="font-psemibold text-lg">Regular Event</Text>
-                <Text className="text-gray-500 text-xs font-pmedium">Create a recurring event for regular meetups or activities.</Text>
+                <Text className="font-psemibold text-lg">Create Your Own Channel</Text>
+                <Text className="text-gray-800 text-xs font-pmedium">Start your own community! Whether you want a public space for hosting events or a private channel for exclusive members, you're in control. Subscribers can host events, RSVP, and join chat rooms to stay engaged. Build your audience, share ideas, and connect—your channel, your community! </Text>
               </View>
               <View className="ml-2">
                 <Image source={icons.next} className="w-4 h-4 mr-1" />
@@ -56,45 +55,28 @@ const BottomSheetContent = ({ handleShowForm, handleCloseForm, showForm }) => {
             </View>
           </TouchableOpacity>
           <View style={styles.separator}/>
-          <TouchableOpacity className="mt-2 mb-2" onPress={ () => {
-              handleShowForm('one-time');
+          <TouchableOpacity className="mt-4 mb-2"onPress={ () => {
+              handleShowForm('new-event');
           }}>
             <View className="flex-row items-start justify-start">
               <View>
-                <Image source={icons.flash} className="w-6 h-6" />
+                <Image source={icons.flag} className="w-6 h-6" />
               </View>
               <View className="ml-6 flex-shrink">
-                <Text className="font-psemibold text-lg">One-Time Event</Text>
-                <Text className="text-gray-500 text-xs font-pmedium">Create a one-time event for casual meetups or activities.</Text>
+                <Text className="font-psemibold text-lg">Host Your Own Event</Text>
+                <Text className="text-gray-800 text-xs font-pmedium">Organize events from the channels you're a part of. Set the date, choose the location, and share all the details to get everyone excited. Invite others to join, manage RSVPs, and create an experience that fosters connection. You'll bring your community together for meaningful interactions and unforgettable moments! </Text>
               </View>
               <View className="ml-2">
-                  <Image source={icons.next} className="w-4 h-4 mr-1" />
+                <Image source={icons.next} className="w-4 h-4 mr-1" />
               </View>
             </View>
           </TouchableOpacity>
-          <View style={styles.separator} />
-          <TouchableOpacity className="mt-2" onPress={ () => {
-              handleShowForm('new-session');
-          }}>
-            <View className="flex-row items-start justify-start">
-              <View>
-                <Image source={icons.play} className="w-6 h-6" />
-              </View>
-              <View className="ml-6 flex-shrink">
-                <Text className="font-psemibold text-lg">New Session</Text>
-                <Text className="text-gray-500 text-xs font-pmedium">Create new session for an existing event. (Only applicable for host or co-host)</Text>
-              </View>
-              <View className="ml-2">
-                  <Image source={icons.next} className="w-4 h-4 mr-1" />
-              </View>
-            </View>
-          </TouchableOpacity>
+          
         </>
       }
 
-      {showForm === 'one-time' && <OneTimeEventForm onSubmit={handleCloseForm}/>}
-      {showForm === 'regular' && <RegularEventForm onSubmit={handleCloseForm}/>}
-      {showForm === 'new-session' && <NewSessionForm onSubmit={handleCloseForm}/>}
+      {showForm === 'new-channel' && <NewChannelForm onSubmit={handleCloseForm}/>}
+      {showForm === 'new-event' && <NewEventForm onSubmit={handleCloseForm}/> }
       
     </ScrollView>
   );
@@ -214,6 +196,7 @@ const TabsLayout = () => {
         backgroundStyle={{
           borderTopLeftRadius: 25,
           borderTopRightRadius: 25,
+          backgroundColor: '#fecc1d',
         }}
       >
         <BottomSheetContent handleShowForm={handleShowForm} handleCloseForm={handleCloseForm} showForm={showForm}/>
@@ -230,7 +213,7 @@ export default TabsLayout;
 const styles = StyleSheet.create({
   separator: {
     height: 1,              
-    backgroundColor: '#ccc', 
+    backgroundColor: '#000', 
     marginVertical: 8,       
   },
 });

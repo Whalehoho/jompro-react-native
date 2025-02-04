@@ -16,14 +16,7 @@ const { googleMapsApiKey } = Constants.expoConfig.extra;
 const screenWidth = Dimensions.get('window').width;
 
 const MIN_LATITUDE_DELTA = 0.022;
-const MIN_LONGITUDE_DELTA = 0.022;
-
-const initialRegion = {
-  latitude: 3.06384,
-  longitude: 101.69694,
-  latitudeDelta: MIN_LATITUDE_DELTA,
-  longitudeDelta: MIN_LONGITUDE_DELTA,
-};
+const MIN_LONGITUDE_DELTA = 0.072;
 
 const categories = [
   { title: 'Outdoor', icon: icons.outdoor },
@@ -55,8 +48,8 @@ const Discover = ({ navigation }) => {
   const searchRef = useRef(null);
   const flatListRef = useRef(null);
   const isFocused = useIsFocused(); // Use this to detect if screen is focused
-  const [sessions, setSessions] = useState([]);
-  const [selectedSessionCard, setSelectedSessionCard] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [selectedEventCard, setSelectedEventCard] = useState(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -74,18 +67,20 @@ const Discover = ({ navigation }) => {
 
   useEffect(() => {
     if (isFocused) {
-      const fetchActiveSessions = async () => {
+      const fetchActiveEvents = async () => {
         try {
-          const response = await api.event.getAllActiveSessions();
-          setSessions(response.data);
+          if(!user || !user.accountId) return;
+          const response = await api.event.getActiveEvents(user.accountId);
+          // console.log('Active events:', response.data);
+          setEvents(response.data);
         } catch (error) {
-          console.error('Failed to fetch active sessions:', error);
+          console.error('Failed to fetch active events:', error);
         }
       };
 
-      fetchActiveSessions();
+      fetchActiveEvents();
     }
-  }, [isFocused]);
+  }, [isFocused, user]);
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -113,7 +108,7 @@ const Discover = ({ navigation }) => {
       clearSearch(); // Clear search input
       setRegion(null); // Reset region to the initial one
       setSelectedAddress(null); // Clear selected address
-      setSelectedSessionCard(null); // Clear selected session card
+      setSelectedEventCard(null); // Clear selected event card
       setSelectedLocation(null); // Clear selected location
 
       const fetchUserAddresses = async () => {
@@ -143,15 +138,15 @@ const Discover = ({ navigation }) => {
     }
   }, [isFocused]); // Run when the screen becomes focused
 
-  // Function to scroll to a specific session in the FlatList
-  const scrollToSession = useCallback((sessionId) => {
-    const index = sessions.findIndex(session => session.sessionId === sessionId);
+  // Function to scroll to a specific event in the FlatList
+  const scrollToEvent = useCallback((eventId) => {
+    const index = events.findIndex(event => event.eventId === eventId);
     if (flatListRef.current && index !== -1) {
       flatListRef.current.scrollToIndex({ index, animated: true });
     }
-  }, [sessions]);
+  }, [events]);
 
-  const RenderSessionCard = React.memo(({ item }) => {
+  const RenderEventCard = React.memo(({ item }) => {
     const category = categories.find(cat => cat.title === item.category);
     const formattedDate = new Date(item.startTime * 1000).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'Asia/Kuala_Lumpur' });
     const formattedTime = new Date(item.startTime * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' });
@@ -159,7 +154,7 @@ const Discover = ({ navigation }) => {
       <TouchableOpacity
         activeOpacity={1}
         onPress={() => {
-          setSelectedSessionCard(item.sessionId);
+          setSelectedEventCard(item.eventId);
           if (mapRef.current) {
             mapRef.current.animateToRegion(
               {
@@ -177,14 +172,14 @@ const Discover = ({ navigation }) => {
       >
         <View style={[
             styles.eventCard, 
-            selectedSessionCard === item.sessionId && { borderWidth: 4, padding: 8, borderColor: '#5e40b7' },
+            selectedEventCard === item.eventId && { borderWidth: 4, padding: 8, borderColor: '#5e40b7' },
         ]}>
           <View className="flex-row items-start justify-between p-1 space-x-2">
             <View className="flex-1 flex-col justify-between h-full">
               <View>
                 <Text className="text-base font-pbold text-secondary" numberOfLines={1}>{formattedDate} • {formattedTime}</Text>
-                <Text className="text-base font-psemibold" numberOfLines={2}>{item.sessionName}</Text>
-                <Text className="text-base font-pregular text-gray-500" numberOfLines={1}>{item.sessionDesc}</Text>
+                <Text className="text-base font-psemibold" numberOfLines={2}>{item.eventName}</Text>
+                <Text className="text-base font-pregular text-gray-500" numberOfLines={1}>{item.eventAbout}</Text>
               </View>
               <View>
                 <Text className="text-sm font-regular">{item.location.region? item.location.region : item.location.city}</Text>
@@ -193,12 +188,12 @@ const Discover = ({ navigation }) => {
             </View>
             <View className="flex-col items-end justify-between h-full">
               <View className="flex-col items-center">
-                <Image source={category.icon} style={{ width: 50, height: 50 }} tintColor={'#5e40b7'}/>
+              <Image source={category.icon} style={{ width: 50, height: 50 }} tintColor={'#5e40b7'}/>
                 <Text className="mt-2 font-pblack text-secondary">{item.category}</Text>
               </View>
               <View className="flex-col items-center px-0">
                 <TouchableOpacity>
-                  <Image source={icons.maximize} style={{ width: 25, height: 25 }} tintColor={'#5e40b7'}/>
+                <Image source={icons.maximize} style={{ width: 25, height: 25 }} tintColor={'#5e40b7'}/>
                 </TouchableOpacity>
               </View>
             </View>
@@ -240,18 +235,18 @@ const Discover = ({ navigation }) => {
   };
 
 
-  const SessionMarker = React.memo(({ session, index, selectedSessionCard, scrollToSession }) => {
-    if (selectedSessionCard === session.sessionId) {
-      return null; // Skip rendering this session marker if it matches the selected location
+  const EventMarker = React.memo(({ event, index, selectedEventCard, scrollToEvent }) => {
+    if (selectedEventCard === event.eventId) {
+      return null; // Skip rendering this event marker if it matches the selected location
     }
 
-    // console.log('Rendering session marker:', session.sessionId);
+    // console.log('Rendering event marker:', event.eventId);
   
-    const sessionLat = session.location.lat;
-    const sessionLng = session.location.lng;
+    const eventLat = event.location.lat;
+    const eventLng = event.location.lng;
   
-    const offsetLat = sessionLat + index * 0.00005;
-    const offsetLng = sessionLng + index * 0.00005;
+    const offsetLat = eventLat + index * 0.00005;
+    const offsetLng = eventLng + index * 0.00005;
   
     const coordinate = useMemo(() => ({
       latitude: offsetLat,
@@ -259,19 +254,19 @@ const Discover = ({ navigation }) => {
     }), [offsetLat, offsetLng]);
   
     const handlePress = useCallback(() => {
-      console.log('Session marker pressed:', session.sessionId);
+      scrollToEvent(event.eventId);
+
       // Delay to allow callout to display
       setTimeout(() => {
-        scrollToSession(session.sessionId);
       }, 300);
-    }, [session.sessionId, scrollToSession]);
+    }, [event.eventId, scrollToEvent]);
   
     return (
       <Marker
-        key={session.sessionId}
+        key={event.eventId}
         coordinate={coordinate}
-        title={session.sessionName}
-        description={session.sessionDesc}
+        title={event.eventName}
+        description={event.eventAbout}
         onPress={handlePress}
       >
         <Image source={icons.flag} style={{ width: 30, height: 30 }} />
@@ -279,13 +274,13 @@ const Discover = ({ navigation }) => {
     );
   }, (prevProps, nextProps) => {
     return (
-      prevProps.session === nextProps.session &&
+      prevProps.event === nextProps.event &&
       prevProps.index === nextProps.index &&
-      prevProps.selectedSessionCard === nextProps.selectedSessionCard
+      prevProps.selectedEventCard === nextProps.selectedEventCard
     );
   });
 
-  const memoizedSessions = useMemo(() => sessions, [sessions]);
+  const memoizedEvents = useMemo(() => events, [events]);
 
   return (
     <View style={styles.container}>
@@ -313,6 +308,7 @@ const Discover = ({ navigation }) => {
           provider={PROVIDER_GOOGLE}
           ref={mapRef}
           style={styles.mapStyle}
+          customMapStyle={customMapStyle}
           zoomEnabled={true}
           scrollEnabled={true}
           initialRegion={region}
@@ -320,20 +316,19 @@ const Discover = ({ navigation }) => {
           showsUserLocation={true}
           showsMyLocationButton={true}
           maxZoomLevel={20}
-          // onRegionChangeComplete={onRegionChangeComplete}
         >
           {selectedLocation && (
             <Marker coordinate={selectedLocation} title={selectedAddress ? selectedAddress : 'default address'} >
               <Image source={icons.flagRed} style={{ width: 40, height: 40 }} />
             </Marker>
           )}
-          {memoizedSessions.map((session, index) => (
-            <SessionMarker
-              key={session.sessionId}
-              session={session}
+          {memoizedEvents.map((event, index) => (
+            <EventMarker
+              key={event.eventId}
+              event={event}
               index={index}
-              selectedSessionCard={selectedSessionCard}
-              scrollToSession={scrollToSession}
+              selectedEventCard={selectedEventCard}
+              scrollToEvent={scrollToEvent}
             />
           ))}
 
@@ -344,15 +339,18 @@ const Discover = ({ navigation }) => {
         <FlatList
           ref={flatListRef}
           horizontal
-          data={sessions} // Avoid using original sessions array in flatlist to prevent re-rendering
-          renderItem={({ item }) => <RenderSessionCard item={item} />}
-          keyExtractor={(item) => item.sessionId.toString()}
+          data={events}
+          renderItem={({ item }) => <RenderEventCard item={item} />}
+          keyExtractor={(item) => item.eventId.toString()}
           showsHorizontalScrollIndicator={false}
           initialNumToRender={10}
           maxToRenderPerBatch={10}
           windowSize={21}
+          snapToAlignment='start'
+          snapToInterval={screenWidth - 60 + 10} /* +10 because of marginRight=10 */
+          decelerationRate='normal'
           getItemLayout={(data, index) => (
-            { length: screenWidth - 60, offset: (screenWidth-60) * index, index }
+            { length: screenWidth - 60 + 10, offset: (screenWidth-60+10) * index, index } /* +10 because of marginRight=10 */ 
           )}
         />
       </View>
@@ -370,10 +368,10 @@ const styles = StyleSheet.create({
   SearchBar: {
     container: {
       position: 'absolute',
-      top: 9,
-      left: 10,
+      top: 15,
+      left: 12,
       right: 10,
-      width: '80%',
+      width: '75%',
       zIndex: 2,
       backgroundColor: 'transparent',
       borderRadius: 25,
@@ -402,8 +400,8 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     position: 'absolute',
-    top: 9,
-    right: 70, 
+    top: 15,
+    right: 90, 
     backgroundColor: 'transparent',
     padding: 10,
     borderRadius: 5,
@@ -414,8 +412,8 @@ const styles = StyleSheet.create({
     color: '#5e40b7',
   },
   mapStyle: {
-    height: '100%',
-    width: '100%',
+    height: '98%',
+    width: '97%',
     top: 1,
     left: 1,
     right: 1,
@@ -439,5 +437,710 @@ const styles = StyleSheet.create({
     height: 180,
   }
 });
+
+const customMapStyle = 
+[
+  {
+      "featureType": "all",
+      "elementType": "labels.text.fill",
+      "stylers": [
+          {
+              "color": "#7c93a3"
+          },
+          {
+              "lightness": "-10"
+          }
+      ]
+  },
+  {
+      "featureType": "administrative.country",
+      "elementType": "geometry",
+      "stylers": [
+          {
+              "visibility": "on"
+          }
+      ]
+  },
+  {
+      "featureType": "administrative.country",
+      "elementType": "geometry.stroke",
+      "stylers": [
+          {
+              "color": "#a0a4a5"
+          }
+      ]
+  },
+  {
+      "featureType": "administrative.province",
+      "elementType": "geometry.stroke",
+      "stylers": [
+          {
+              "color": "#62838e"
+          }
+      ]
+  },
+  {
+      "featureType": "landscape",
+      "elementType": "geometry.fill",
+      "stylers": [
+          {
+              "color": "#dde3e3"
+          }
+      ]
+  },
+  {
+      "featureType": "landscape.man_made",
+      "elementType": "geometry.stroke",
+      "stylers": [
+          {
+              "color": "#3f4a51"
+          },
+          {
+              "weight": "0.30"
+          }
+      ]
+  },
+  {
+      "featureType": "poi",
+      "elementType": "all",
+      "stylers": [
+          {
+              "visibility": "simplified"
+          }
+      ]
+  },
+  {
+      "featureType": "poi.attraction",
+      "elementType": "all",
+      "stylers": [
+          {
+              "visibility": "on"
+          }
+      ]
+  },
+  {
+      "featureType": "poi.business",
+      "elementType": "all",
+      "stylers": [
+          {
+              "visibility": "off"
+          }
+      ]
+  },
+  {
+      "featureType": "poi.government",
+      "elementType": "all",
+      "stylers": [
+          {
+              "visibility": "off"
+          }
+      ]
+  },
+  {
+      "featureType": "poi.park",
+      "elementType": "all",
+      "stylers": [
+          {
+              "visibility": "on"
+          }
+      ]
+  },
+  {
+      "featureType": "poi.place_of_worship",
+      "elementType": "all",
+      "stylers": [
+          {
+              "visibility": "off"
+          }
+      ]
+  },
+  {
+      "featureType": "poi.school",
+      "elementType": "all",
+      "stylers": [
+          {
+              "visibility": "off"
+          }
+      ]
+  },
+  {
+      "featureType": "poi.sports_complex",
+      "elementType": "all",
+      "stylers": [
+          {
+              "visibility": "off"
+          }
+      ]
+  },
+  {
+      "featureType": "road",
+      "elementType": "all",
+      "stylers": [
+          {
+              "saturation": "-100"
+          },
+          {
+              "visibility": "on"
+          }
+      ]
+  },
+  {
+      "featureType": "road",
+      "elementType": "geometry.stroke",
+      "stylers": [
+          {
+              "visibility": "on"
+          }
+      ]
+  },
+  {
+      "featureType": "road.highway",
+      "elementType": "geometry.fill",
+      "stylers": [
+          {
+              "color": "#bbcacf"
+          }
+      ]
+  },
+  {
+      "featureType": "road.highway",
+      "elementType": "geometry.stroke",
+      "stylers": [
+          {
+              "lightness": "0"
+          },
+          {
+              "color": "#bbcacf"
+          },
+          {
+              "weight": "0.50"
+          }
+      ]
+  },
+  {
+      "featureType": "road.highway",
+      "elementType": "labels",
+      "stylers": [
+          {
+              "visibility": "on"
+          }
+      ]
+  },
+  {
+      "featureType": "road.highway",
+      "elementType": "labels.text",
+      "stylers": [
+          {
+              "visibility": "on"
+          }
+      ]
+  },
+  {
+      "featureType": "road.highway.controlled_access",
+      "elementType": "geometry.fill",
+      "stylers": [
+          {
+              "color": "#ffffff"
+          }
+      ]
+  },
+  {
+      "featureType": "road.highway.controlled_access",
+      "elementType": "geometry.stroke",
+      "stylers": [
+          {
+              "color": "#a9b4b8"
+          }
+      ]
+  },
+  {
+      "featureType": "road.arterial",
+      "elementType": "labels.icon",
+      "stylers": [
+          {
+              "invert_lightness": true
+          },
+          {
+              "saturation": "-7"
+          },
+          {
+              "lightness": "3"
+          },
+          {
+              "gamma": "1.80"
+          },
+          {
+              "weight": "0.01"
+          }
+      ]
+  },
+  {
+      "featureType": "transit",
+      "elementType": "all",
+      "stylers": [
+          {
+              "visibility": "off"
+          }
+      ]
+  },
+  {
+      "featureType": "water",
+      "elementType": "geometry.fill",
+      "stylers": [
+          {
+              "color": "#a3c7df"
+          }
+      ]
+  }
+]
+//[
+//   {
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#1d2c4d"
+//       }
+//     ]
+//   },
+//   {
+//     "elementType": "labels.text.fill",
+//     "stylers": [
+//       {
+//         "color": "#8ec3b9"
+//       }
+//     ]
+//   },
+//   {
+//     "elementType": "labels.text.stroke",
+//     "stylers": [
+//       {
+//         "color": "#1a3646"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "administrative.country",
+//     "elementType": "geometry.stroke",
+//     "stylers": [
+//       {
+//         "color": "#4b6878"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "administrative.land_parcel",
+//     "elementType": "labels.text.fill",
+//     "stylers": [
+//       {
+//         "color": "#64779e"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "administrative.province",
+//     "elementType": "geometry.stroke",
+//     "stylers": [
+//       {
+//         "color": "#4b6878"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "landscape.man_made",
+//     "elementType": "geometry.stroke",
+//     "stylers": [
+//       {
+//         "color": "#334e87"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "landscape.natural",
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#023e58"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "poi",
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#283d6a"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "poi",
+//     "elementType": "labels.text.fill",
+//     "stylers": [
+//       {
+//         "color": "#6f9ba5"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "poi",
+//     "elementType": "labels.text.stroke",
+//     "stylers": [
+//       {
+//         "color": "#1d2c4d"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "poi.park",
+//     "elementType": "geometry.fill",
+//     "stylers": [
+//       {
+//         "color": "#023e58"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "poi.park",
+//     "elementType": "labels.text.fill",
+//     "stylers": [
+//       {
+//         "color": "#3C7680"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road",
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#304a7d"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road",
+//     "elementType": "labels.text.fill",
+//     "stylers": [
+//       {
+//         "color": "#98a5be"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road",
+//     "elementType": "labels.text.stroke",
+//     "stylers": [
+//       {
+//         "color": "#1d2c4d"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road.highway",
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#2c6675"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road.highway",
+//     "elementType": "geometry.stroke",
+//     "stylers": [
+//       {
+//         "color": "#255763"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road.highway",
+//     "elementType": "labels.text.fill",
+//     "stylers": [
+//       {
+//         "color": "#b0d5ce"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road.highway",
+//     "elementType": "labels.text.stroke",
+//     "stylers": [
+//       {
+//         "color": "#023e58"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "transit",
+//     "elementType": "labels.text.fill",
+//     "stylers": [
+//       {
+//         "color": "#98a5be"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "transit",
+//     "elementType": "labels.text.stroke",
+//     "stylers": [
+//       {
+//         "color": "#1d2c4d"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "transit.line",
+//     "elementType": "geometry.fill",
+//     "stylers": [
+//       {
+//         "color": "#283d6a"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "transit.station",
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#3a4762"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "water",
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#0e1626"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "water",
+//     "elementType": "labels.text.fill",
+//     "stylers": [
+//       {
+//         "color": "#4e6d70"
+//       }
+//     ]
+//   }
+// ]
+
+// [
+//   {
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#ebe3cd"
+//       }
+//     ]
+//   },
+//   {
+//     "elementType": "labels.text.fill",
+//     "stylers": [
+//       {
+//         "color": "#523735"
+//       }
+//     ]
+//   },
+//   {
+//     "elementType": "labels.text.stroke",
+//     "stylers": [
+//       {
+//         "color": "#f5f1e6"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "administrative",
+//     "elementType": "geometry.stroke",
+//     "stylers": [
+//       {
+//         "color": "#c9b2a6"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "administrative.land_parcel",
+//     "elementType": "geometry.stroke",
+//     "stylers": [
+//       {
+//         "color": "#dcd2be"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "administrative.land_parcel",
+//     "elementType": "labels.text.fill",
+//     "stylers": [
+//       {
+//         "color": "#ae9e90"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "landscape.natural",
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#dfd2ae"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "poi",
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#dfd2ae"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "poi",
+//     "elementType": "labels.text.fill",
+//     "stylers": [
+//       {
+//         "color": "#93817c"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "poi.park",
+//     "elementType": "geometry.fill",
+//     "stylers": [
+//       {
+//         "color": "#a5b076"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "poi.park",
+//     "elementType": "labels.text.fill",
+//     "stylers": [
+//       {
+//         "color": "#447530"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road",
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#f5f1e6"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road.arterial",
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#fdfcf8"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road.highway",
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#f8c967"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road.highway",
+//     "elementType": "geometry.stroke",
+//     "stylers": [
+//       {
+//         "color": "#e9bc62"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road.highway.controlled_access",
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#e98d58"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road.highway.controlled_access",
+//     "elementType": "geometry.stroke",
+//     "stylers": [
+//       {
+//         "color": "#db8555"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road.local",
+//     "elementType": "labels.text.fill",
+//     "stylers": [
+//       {
+//         "color": "#806b63"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "transit.line",
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#dfd2ae"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "transit.line",
+//     "elementType": "labels.text.fill",
+//     "stylers": [
+//       {
+//         "color": "#8f7d77"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "transit.line",
+//     "elementType": "labels.text.stroke",
+//     "stylers": [
+//       {
+//         "color": "#ebe3cd"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "transit.station",
+//     "elementType": "geometry",
+//     "stylers": [
+//       {
+//         "color": "#dfd2ae"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "water",
+//     "elementType": "geometry.fill",
+//     "stylers": [
+//       {
+//         "color": "#b9d3c2"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "water",
+//     "elementType": "labels.text.fill",
+//     "stylers": [
+//       {
+//         "color": "#92998d"
+//       }
+//     ]
+//   }
+// ]
 
 export default Discover;

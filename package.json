@@ -4,6 +4,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
+    "clearCache": "expo start -c",
     "android": "expo run:android",
     "android-release": "cd android && ./gradlew assembleRelease && adb install app/build/outputs/apk/release/app-release.apk",
     "ios": "expo run:ios",

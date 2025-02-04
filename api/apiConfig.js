@@ -1,5 +1,5 @@
 const BASE_URL = 'http://192.168.100.161:8180'; //endah
-// const BASE_URL = 'http://192.168.22.186:8180'; //hotspot
+// const BASE_URL = 'http://192.168.9.186:8180'; //hotspot
 // const BASE_URL = 'http://10.101.98.63:8180'; //Student@APU2.0
 // const BASE_URL = 'http://10.112.79.98:8180'; //Student@APU
 // const BASE_URL = 'https://2617-2001-f40-987-15c1-c8b8-e1ad-f08d-a7b9.ngrok-free.app';

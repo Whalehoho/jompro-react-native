@@ -10,3 +10,5 @@ const Create = () => {
 }
 
 export default Create
+
+// This jsx file will not be used because when create button is clicked, the user will be displayed a bottom sheet with options to create a new channel or a new event.
