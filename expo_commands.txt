@@ -2,6 +2,7 @@
 1. npx expo start
    - Use this command to start the Metro bundler and enable live reloading in your project.
    - Use when you want to debug your app JavaScript-only features. Custom native code won't be available.
+   - Use "expo start --tunnel" if mobile device and pc not under same network.
 
 2. npx expo run:android
    - Use this command to build and deploy your app to an Android device or emulator.

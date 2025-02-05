@@ -102,7 +102,7 @@ const Profile = () => {
   
 
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to log out?', [
+    Alert.alert('Logout', 'Proceed to log out?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Logout', onPress: () => {
         logoutUser();

@@ -19,3 +19,13 @@ export const getActiveEvents = async(organizerId) => { //exclude own events
         throw error;
     }
 }
+
+export const getEvent = async(eventId) => {
+    try {
+        const response = await apiClient.get(`/event/getById/${eventId}`, { timeout: 10000 });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching event:', error);
+        throw error;
+    }
+}

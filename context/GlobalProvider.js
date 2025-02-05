@@ -8,6 +8,7 @@ const GlobalProvider = ({ children }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [starredEvents, setStarredEvents] = useState({});
 
     useEffect(() => {
         // Retrieve isLoggedIn state from AsyncStorage when the app loads
@@ -39,6 +40,7 @@ const GlobalProvider = ({ children }) => {
     const logoutUser = () => {
         setIsLoggedIn(false);
         setUser(null);
+        setStarredEvents({});
         console.log('User logged out');
         AsyncStorage.removeItem('isLoggedIn');
         AsyncStorage.removeItem('user');
@@ -47,6 +49,16 @@ const GlobalProvider = ({ children }) => {
         AsyncStorage.removeItem('userToken');
     };
 
+    const setIsEventStarred = (eventId, isStarred) => {
+      setStarredEvents(prev => ({
+        ...prev,
+        [eventId]: isStarred,
+      }));
+      // TO BE IMPLEMENTED:
+      // Update the server with the new starred state.
+    };
+  
+
     return (
         <GlobalContext.Provider
             value={{
@@ -54,7 +66,9 @@ const GlobalProvider = ({ children }) => {
                 isLoggedIn,
                 user,
                 loginUser,
-                logoutUser
+                logoutUser,
+                starredEvents,
+                setIsEventStarred,
             }}
         >
             {children}

@@ -55,6 +55,8 @@ import flag from "../assets/icons/flag.png";
 import flagRed from "../assets/icons/flag-red.png";
 import broadcast from "../assets/icons/broadcast.png";
 import party from "../assets/icons/party.png";
+import star from "../assets/icons/star.png";
+import unstar from "../assets/icons/unstar.png";
 
 export default {
   play,
@@ -114,4 +116,6 @@ export default {
   flagRed,
   broadcast,
   party,
+  star,
+  unstar,
 };

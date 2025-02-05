@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback, PureComponent } from 'react';
 import { View, Image, TouchableOpacity, Text, StyleSheet, ScrollView, FlatList, Dimensions, Platform, PermissionsAndroid } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
@@ -11,6 +11,7 @@ import { icons } from '../../constants';
 import { images } from '../../constants';
 
 import Constants from 'expo-constants';
+import { router } from 'expo-router';
 const { googleMapsApiKey } = Constants.expoConfig.extra;
 
 const screenWidth = Dimensions.get('window').width;
@@ -192,7 +193,11 @@ const Discover = ({ navigation }) => {
                 <Text className="mt-2 font-pblack text-secondary">{item.category}</Text>
               </View>
               <View className="flex-col items-center px-0">
-                <TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push(`/event-info?eventId=${item.eventId}`);
+                  }}
+                >
                 <Image source={icons.maximize} style={{ width: 25, height: 25 }} tintColor={'#5e40b7'}/>
                 </TouchableOpacity>
               </View>
