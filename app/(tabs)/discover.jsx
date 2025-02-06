@@ -184,7 +184,7 @@ const Discover = ({ navigation }) => {
               </View>
               <View>
                 <Text className="text-sm font-regular">{item.location.region? item.location.region : item.location.city}</Text>
-                <Text className="text-sm font-regular">{item.participants ? item.participants.length : 0} attendee(s)</Text>
+                <Text className="text-sm font-regular">{item.duration? item.duration/3600 : 0} hour(s) event </Text>
               </View>
             </View>
             <View className="flex-col items-end justify-between h-full">

@@ -10,3 +10,13 @@ export const getMySubscribed = async (accountId) => {
         throw error;
     }
 }
+
+export const getSubscribedByChannelId = async (channelId) => {
+    try {
+        const response = await apiClient.get(`/subscription/getSubscribedByChannelId/${channelId}`, { timeout: 10000 });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching subscriptions:', error);
+        throw error;
+    }
+}

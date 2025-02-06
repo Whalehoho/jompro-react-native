@@ -83,3 +83,14 @@ export const removeAddress = async (accountId, addressData) => {
   }
 }
 
+export const getProfileUrlbyId = async (accountId) => {
+  try {
+    const response = await apiClient.get(`/user/getProfileUrlbyAccountId/${accountId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching profile url:', error);
+    throw error;
+  }
+}
+
+
