@@ -1,11 +1,11 @@
-import { StyleSheet, Text, View, Image, ScrollView, TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, View, Image, ScrollView, TouchableOpacity, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState, useRef, use } from 'react';
 import * as api from '../../api';
 import CustomButton from '../../components/CustomButton';
-
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useGlobalContext } from '../../context/GlobalProvider';
 
 import { icons, images } from '../../constants';
@@ -61,6 +61,7 @@ const EventInfo = () => {
     const [attendeesProfile, setAttendeesProfile] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [channel, setChannel] = useState(null);
+    const [myRSVP, setMyRSVP] = useState(null);
     
 
     const isEventStarred = starredEvents[eventId] || false;  
@@ -87,7 +88,24 @@ const EventInfo = () => {
                 console.error('Failed to fetch event:', error);
             }
         };
+        const fetchMyRSVP = async () => {
+            try {
+                const storedUser = await AsyncStorage.getItem('user');
+                if (storedUser) {
+                    const parsedUser = JSON.parse(storedUser);
+                    const response = await api.rsvp.getByEventIdAndAccountId(eventId, parsedUser.accountId);
+                    if(!response){ 
+                        setMyRSVP(null);
+                    } else {
+                        setMyRSVP(response.data);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load user from storage:', error);
+            }
+        };
         fetchEvent();
+        fetchMyRSVP();
     }, [eventId]);
 
     useEffect(() => {
@@ -162,6 +180,83 @@ const EventInfo = () => {
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
+            const storedUser = await AsyncStorage.getItem('user');
+            if (!storedUser) {
+                console.error('User not found in storage');
+                setIsSubmitting(false);
+                return;
+            }
+            const parsedUser = JSON.parse(storedUser);
+            if(!myRSVP && event.autoApprove === false){
+                Alert.alert(
+                    'RSVP Request',
+                    'Are you sure you want to RSVP to this event?',
+                    [
+                        {
+                            text: 'Never mind',
+                            onPress: () => setIsSubmitting(false),
+                            style: 'cancel'
+                        },
+                        {
+                            text: 'OK',
+                            onPress: async () => {
+                                const rsvpData = {
+                                    accountId: parsedUser.accountId,
+                                    eventId: eventId,
+                                    status: 'pending',
+                                };
+                                const response = await api.rsvp.createRsvp(rsvpData);
+                                setMyRSVP(response.data);
+                            }
+                        }
+                    ]
+                )
+            } else if (!myRSVP && event.autoApprove === true){
+                Alert.alert(
+                    'RSVP Request',
+                    'Are you sure you want to RSVP to this event?',
+                    [
+                        {
+                            text: 'Never mind',
+                            onPress: () => setIsSubmitting(false),
+                            style: 'cancel'
+                        },
+                        {
+                            text: 'OK',
+                            onPress: async () => {
+                                const rsvpData = {
+                                    accountId: parsedUser.accountId,
+                                    eventId: eventId,
+                                    status: 'approved',
+                                };
+                                const response = await api.rsvp.createRsvp(rsvpData);
+                                setMyRSVP(response.data);
+                            }
+                        }
+                    ]
+                )
+            }else if(myRSVP && myRSVP.status === 'approved'){
+                Alert.alert(
+                    'Cancel RSVP',
+                    'Are you sure you want to cancel your RSVP to this event?',
+                    [
+                        {
+                            text: 'Never mind',
+                            onPress: () => setIsSubmitting(false),
+                            style: 'cancel'
+                        },
+                        {
+                            text: 'OK',
+                            onPress: async () => {
+                                const response = await api.rsvp.deleteRsvp(myRSVP.rsvpId);
+                                setMyRSVP(null);
+                            }
+                        }
+                    ]
+                )
+
+            }
+
             // TO BE IMPLEMENTED:
             // Send RSVP request to the server
             // const response = await api.rsvp.createRsvp(eventId);
@@ -311,13 +406,37 @@ const EventInfo = () => {
                         </View>
                         <View style={{ flex: 1, alignItems: 'flex-end' }}>
                             <View className="flex-row items-center justify-center pb-4 pt-4">
-                                <CustomButton
-                                    title="Join & RSVP"
-                                    handlePress={handleSubmit}
-                                    containerStyles="w-4/5 mt-0 rounded-lg"
-                                    textStyles="text-base"
-                                    isLoading={isSubmitting}
+                                { myRSVP && myRSVP.status === 'approved' && 
+                                    <CustomButton
+                                        title="Cancel RSVP"
+                                        handlePress={handleSubmit}
+                                        containerStyles="w-4/5 mt-0 rounded-lg bg-primary"
+                                        textStyles="text-base text-black"
+                                        isLoading={isSubmitting}
+                                    />
+                                }
+                                {
+                                    myRSVP && myRSVP.status === 'pending' &&
+                                    <CustomButton
+                                        title="Pending"
+                                        handlePress={handleSubmit}
+                                        containerStyles="w-4/5 mt-0 rounded-lg"
+                                        textStyles="text-base"
+                                        isLoading={isSubmitting}
+                                        disabled={true}
+                                    />
+                                }
+                                {
+                                    !myRSVP &&
+                                    <CustomButton
+                                        title="Join & RSVP"
+                                        handlePress={handleSubmit}
+                                        containerStyles="w-4/5 mt-0 rounded-lg"
+                                        textStyles="text-base"
+                                        isLoading={isSubmitting}
                                 />
+                                }
+                                
                             </View>
                         </View>
                     </View>
