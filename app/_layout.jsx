@@ -42,6 +42,7 @@ const RootLayout = () => {
         <Stack.Screen name="(event)" options={{headerShown: false}} />
         <Stack.Screen name="(tabs)" options={{headerShown: false}} />
         <Stack.Screen name="(profile)" options={{ headerShown: false}} />
+        <Stack.Screen name="(subscription)" options={{ headerShown: false}} />
         {/* <Stack.Screen name="/search/[query]" options={{headerShown: false}} /> */}
       </Stack>
       <StatusBar backgroundColor='#fecc1d' style='auto' hidden={false} translucent={false}/>

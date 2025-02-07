@@ -1,12 +1,15 @@
-import { StyleSheet, Text, View, Image, ScrollView, TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, View, Image, ScrollView, TouchableOpacity, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState, useRef, use } from 'react';
+import React, { useEffect, useState, useRef, use, forwardRef } from 'react';
 import * as api from '../../api';
 import CustomButton from '../../components/CustomButton';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';  // Import BottomSheetBackdrop
 import { icons, images } from '../../constants';
+import UserProfileBottomSheet from '../../components/UserProfileBottomSheet';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const categories = [
     { title: 'Outdoor', icon: icons.outdoor },
@@ -25,28 +28,12 @@ const categories = [
     { title: 'Tabletop', icon: icons.boardGames },
     { title: 'Cosplay', icon: icons.cosplay },
     { title: 'Garden', icon: icons.gardening }
-  ];
+];
 
-  const MembersProfileImages = ({ profileUrls }) => {
-    return (
-        <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center" }}>
-          {profileUrls.map((url, index) => (
-            <Image
-              key={index}
-              source={{ uri: url }}
-              style={{
-                width: 60,
-                height: 60,
-                borderRadius: 50,
-                margin: 4, // Space between images
-                borderWidth: 2,
-                borderColor: "white",
-              }}
-            />
-          ))}
-        </View>
-    );
-};
+
+
+
+const MAX_VISIBLE_EVENTS = 3;
 
 const ChannelInfo = () => {
     const { channelId } = useLocalSearchParams();
@@ -58,6 +45,53 @@ const ChannelInfo = () => {
     const [ownerProfile, setOwnerProfile] = useState(null);
     const [membersProfile, setMembersProfile] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [mySubscription, setMySubscription] = useState(null);
+    const [events, setEvents] = useState([]);
+    const [showAllEvents, setShowAllEvents] = useState(false);
+    const [userId, setUserId] = useState(null);
+    const [isMyChannel, setIsMyChannel] = useState(false);
+    const [showPendingSubscriptions, setShowPendingSubscriptions] = useState(false);
+    const [pendingSubscriptions, setPendingSubscriptions] = useState(null);
+    const [subscribersProfile, setSubscribersProfile] = useState(null);
+    const bottomSheetRef = useRef(null);
+    const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
+
+    
+
+    const displayedEvents = showAllEvents ? events : events.slice(0, MAX_VISIBLE_EVENTS);
+
+    const [shouldRerender, setShouldRerender] = useState(false);
+
+    useEffect(() => {
+        setShouldRerender(prev => !prev); // Toggle state to trigger re-render
+    }, [isBottomSheetOpen, pendingSubscriptions, membersProfile]); // Runs every time bottom sheet opens/closes
+
+
+    useEffect(() => {
+        if(!channel) return;
+        if(!userId) return;
+        if(!channel.ownerId) return;
+        if(Number(userId) === Number(channel.ownerId)) {
+            setIsMyChannel(true);
+        }
+    }, [channel, userId]);
+    
+    useEffect(() => {
+        const fetchUserId = async () => {
+            try {
+                const storedUser = await AsyncStorage.getItem('user');
+                if (!storedUser) {
+                    console.error('User not found in storage');
+                    return;
+                }
+                const parsedUser = JSON.parse(storedUser);
+                setUserId(parsedUser.accountId);
+            } catch (error) {
+                console.error('Error fetching user:', error);
+            }
+        };
+        fetchUserId();
+    }, [channelId]);
 
     useEffect(() => {
         const fetchChannel = async () => {
@@ -116,8 +150,8 @@ const ChannelInfo = () => {
                 const members = response.data;
                 const membersProfile = [];
                 for (const member of members) {
-                    const response = await api.user.getProfileUrlbyId(member.subscriberId);
-                    membersProfile.push(response.data.profile_img_url);
+                    const response = await api.user.getProfilebyId(member.subscriberId);
+                    membersProfile.push(response.data);
                 }
                 setMembersProfile(membersProfile);
             } catch (error) {
@@ -125,15 +159,180 @@ const ChannelInfo = () => {
             }
         };
         fetchMembersProfile();
+    }, [channel, isBottomSheetOpen]);
+
+    useEffect(() => {
+        if(!channel) return;
+        const fetchMySubscription = async () => {
+            try {
+                const storedUser = await AsyncStorage.getItem('user');
+                if (!storedUser) {
+                    console.error('User not found in storage');
+                    return;
+                }
+                const parsedUser = JSON.parse(storedUser);
+                const response = await api.subscription.getSubscribedByChannelIdAndAccountId(parsedUser.accountId, channel.channelId);
+                setMySubscription(response.data);
+            } catch (error) {
+                console.error('Error fetching my subscription:', error);
+            }
+        };
+        fetchMySubscription();
     }, [channel]);
+
+    useEffect(() => {
+        if(!channel) return;
+        const fetchPendingSubscriptions = async () => {
+            try {
+                const response = await api.subscription.getPendingbyChannelId(channel.channelId);
+                setPendingSubscriptions(response.data);
+            } catch (error) {
+                console.error('Error fetching pending subscriptions:', error);
+            }
+        };
+        fetchPendingSubscriptions();
+    }, [channel, isBottomSheetOpen]);
+
+    useEffect(() => {
+        if(!channel) return;
+        const fetchEvents = async () => {
+            try {
+                const response = await api.event.getActiveEventsByChannelId(channel.channelId);
+                setEvents(response.data);
+            } catch (error) {
+                console.error('Error fetching events:', error);
+            }
+        };
+        fetchEvents();
+    }, [channel]);
+
+    const handleBottomSheetClose = () => {
+        setIsBottomSheetOpen(false);
+    };
+
+    const handleOpenBottomSheet = () => {
+        setIsBottomSheetOpen(true);
+        bottomSheetRef.current?.open();
+    };
+
+    const ProfileImages = forwardRef(({ profiles, type, toDo, data }, bottomSheetRef) => {
+        return (
+            <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center" }}>
+              {profiles.map((profile, index) => (
+                <TouchableOpacity key={index} onPress={() => {
+                    bottomSheetRef.current?.setUserProfile(profile);
+                    bottomSheetRef.current?.setType(type);
+                    bottomSheetRef.current?.setToDo(toDo);
+                    bottomSheetRef.current?.setData(data);
+                    handleOpenBottomSheet();
+                 }}>
+                    <Image
+                    key={index}
+                    source={{ uri: profile.profileImgUrl? profile.profileImgUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s'}}
+                    style={{
+                        width: 60,
+                        height: 60,
+                        borderRadius: 50,
+                        margin: 4, // Space between images
+                        borderWidth: 2,
+                        borderColor: "white",
+                    }}
+                    />
+                </TouchableOpacity>
+              ))}
+            </View>
+        );
+    });
+
+    useEffect(() => {
+        if(!pendingSubscriptions) return;
+        const fetchSubscribersProfile = async () => {
+            try {
+                const subscribers = pendingSubscriptions;
+                const subscribersProfile = [];
+                for (const subscriber of subscribers) {
+                    const response = await api.user.getProfilebyId(subscriber.subscriberId);
+                    subscribersProfile.push(response.data);
+                }
+                setSubscribersProfile(subscribersProfile);
+            } catch (error) {
+                console.error('Error fetching subscribers profile:', error);
+            }
+        };
+        fetchSubscribersProfile();
+    }, [pendingSubscriptions, isBottomSheetOpen]);
+
+    
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
-            // TO BE IMPLEMENTED:
-            // Send RSVP request to the server
-            // const response = await api.rsvp.createRsvp(eventId);
-            // console.log(response);
+            const storedUser = await AsyncStorage.getItem('user');
+            if (!storedUser) {
+                console.error('User not found in storage');
+                setIsSubmitting(false);
+                return;
+            }
+            const parsedUser = JSON.parse(storedUser);
+            if(!mySubscription && channel && channel.privacy === 'private') {
+                Alert.alert('Private Channel', 'This is a private channel. Do you want to subscribe?', [
+                    {
+                        text: 'Never mind',
+                        style: 'cancel',
+                        onPress: () => setIsSubmitting(false)
+                    },
+                    {
+                        text: 'Ok',
+                        onPress: async () => {
+                            const subscription = {
+                                subscriberId: parsedUser.accountId,
+                                channelId: channel.channelId,
+                                status: 'pending'
+                            };
+                            const response = await api.subscription.subscribe(subscription);
+                            setMySubscription(response.data);
+                            setIsSubmitting(false);
+                        }
+                    }
+                ]);
+            } else if(!mySubscription && channel && channel.privacy === 'public') {
+                Alert.alert('Subscribe to Channel', 'Do you want to subscribe?', [
+                    {
+                        text: 'Never mind',
+                        style: 'cancel',
+                        onPress: () => setIsSubmitting(false)
+                    },
+                    {
+                        text: 'Ok',
+                        onPress: async () => {
+                            const subscription = {
+                                subscriberId: parsedUser.accountId,
+                                channelId: channel.channelId,
+                                status: 'subscribed'
+                            };
+                            const response = await api.subscription.subscribe(subscription);
+                            setMySubscription(response.data);
+                            setIsSubmitting(false);
+                        }
+                    }
+                ]);
+            }else if(mySubscription && mySubscription.status === 'subscribed') {
+                Alert.alert('Unsubscribe', 'Do you want to unsubscribe?', [
+                    {
+                        text: 'Never mind',
+                        style: 'cancel',
+                        onPress: () => setIsSubmitting(false)
+                    },
+                    {
+                        text: 'Ok',
+                        onPress: async () => {
+                            await api.subscription.unsubscribe(mySubscription.subscriptionId);
+                            setMySubscription(null);
+                            setIsSubmitting(false);
+                        }
+                    }
+                ]);
+            }
             setIsSubmitting(false);
         } catch (error) {
             console.error('Failed to submit RSVP:', error);
@@ -142,7 +341,7 @@ const ChannelInfo = () => {
     };
 
     return (
-        <>
+        <GestureHandlerRootView style={{ flex: 1 }}>
             <SafeAreaView className="flex-1 bg-white h-full">
                 <ScrollView>
                     <View className="w-full h-60 bg-white">
@@ -154,13 +353,16 @@ const ChannelInfo = () => {
                     </View>
                     <View className="mx-4 mb-6 space-y-2">
                         {channel && <Text className="text-2xl font-pbold mt-2" style={{ lineHeight: 40 }}>{channel.channelName}</Text>}
-                        <View className="flex-row space-x-2">
-                            {channel && 
-                                <Text className="text-secondary-100 text-sm font-pmedium">{channel.category}</Text>
-                            }
-                            {icon && 
-                                <Image source={icon} className="w-4 h-4" tintColor={'#7257ca'}/>
-                            }    
+                        <View className="flex-row justify-between items-center">
+                            <View className="flex-row space-x-2">
+                                {channel && 
+                                    <Text className="text-secondary-100 text-sm font-pmedium">{channel.category}</Text>
+                                }
+                                {icon && 
+                                    <Image source={icon} className="w-4 h-4" tintColor={'#7257ca'}/>
+                                }    
+                            </View>
+                            <Text className="text-secondary-100 text-sm font-pmedium">{channel?.privacy === 'private' ? 'Private channel' : 'Public channel'}</Text>
                         </View>
                     </View>
 
@@ -170,7 +372,7 @@ const ChannelInfo = () => {
                         <Text className="font-pbold text-xl text-gray-700">Owner</Text>
                         <View className="flex-row">
                             { ownerProfile && 
-                                <Image source={{ uri: ownerProfile }} className="w-16 h-16 rounded-full ml-0" />
+                                <Image source={{ uri: ownerProfile? ownerProfile : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }} className="w-14 h-14 rounded-full ml-0" />
                              }
                         </View>
                     </View>
@@ -181,11 +383,46 @@ const ChannelInfo = () => {
                         <Text className="font-pbold text-xl text-gray-700">Members({membersProfile?membersProfile.length:''})</Text>
                         <View className="flex-row">
                             { membersProfile && 
-                                <MembersProfileImages profileUrls={membersProfile} /> }
+                                <ProfileImages profiles={membersProfile} ref={bottomSheetRef} type={"members"} toDo={isMyChannel ? "edit" : "view"} data={channel.channelId} shouldRerender={shouldRerender}/> }
                         </View>
                     </View>
 
-                    <View style={styles.separator} className="mt-2 mb-4" />
+                    {isMyChannel && showPendingSubscriptions && (
+                        <>
+                            <View style={styles.separator} className="mt-4 mb-4" />
+                                <View className="mx-4 space-y-2 mb-4" style={{ flex: 0.5, alignItems: 'flex-start' }}>
+                                <Text className="font-pbold text-xl text-gray-700">Requests({subscribersProfile?subscribersProfile.length:''})</Text>
+                                <View className="flex-row">
+                                    { subscribersProfile && 
+                                        <ProfileImages profiles={subscribersProfile} ref={bottomSheetRef} type={"subscriptions"} toDo={"edit"} data={channel.channelId} shouldRerender={shouldRerender}/> }
+                                </View>
+                            </View>
+                        </>
+                    )}
+
+                    {isMyChannel && (
+                            <TouchableOpacity onPress={async () => { 
+                                    setShowPendingSubscriptions(!showPendingSubscriptions);
+                                    const fetchPendingSubscriptions = async () => {
+                                        try {
+                                            const response = await api.subscription.getPendingbyChannelId(channelId);
+                                            setPendingSubscriptions(response.data);
+                                        } catch (error) {
+                                            console.error('Error fetching pending subscriptions:', error);
+                                        }
+                                    };
+                                    await fetchPendingSubscriptions();
+                                }} 
+                                className="mt-2">
+                                <Text className="text-blue-500 text-center font-pmedium">
+                                    {showPendingSubscriptions ? "Hide Pending Subscription(s)" : "Show Pending Subscription(s)"}
+                                </Text>
+                            </TouchableOpacity>
+                    )}
+
+                    
+
+                    <View style={styles.separator} className="mt-4 mb-4" />
 
 
                     <View className="mx-4 mb-2 space-y-2">
@@ -208,9 +445,55 @@ const ChannelInfo = () => {
                         )}
                     </View>
 
+                    <View style={styles.separator} className="mt-2 mb-4" />
+
+
+                    <View className="mx-4 mb-2 space-y-2">
+                        <Text className="font-pbold text-xl text-gray-700 mb-2">Recent Events({events?.length})</Text>
+
+                        {displayedEvents.map((event, index) => (
+                            <TouchableOpacity key={index} className="mt-2 mb-2 bg-primary rounded-lg" onPress={() => { router.push(`/event-info?eventId=${event.eventId}`) }}>
+                                <View className="flex-row border border-black rounded-lg">
+                                    {/* Date & Time Section (30%) */}
+                                    <View className="my-4 space-y-2 flex-[0.3] border-r border-black items-center justify-center">
+                                        <Text className="font-psemibold text-sm text-secondary-100">
+                                            {new Date(event.startTime * 1000).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Kuala_Lumpur' })}
+                                        </Text>
+                                        <Text className="font-psemibold text-sm text-secondary-100">
+                                            {new Date(event.startTime * 1000).toLocaleDateString('en-US', { timeZone: 'Asia/Kuala_Lumpur' })}
+                                        </Text>
+                                        <Text className="text-gray-600 text-xs font-pregular">
+                                            {new Date(event.startTime * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })}
+                                        </Text>
+                                    </View>
+
+                                    {/* Event Name & Location (70%) */}
+                                    <View className="ml-4 my-4 space-y-1 flex-[0.7]">
+                                        <Text className="font-psemibold text-lg " numberOfLines={1} ellipsizeMode="tail">
+                                                {event.eventName}
+                                        </Text>
+
+                                        <Text className="text-gray-600 text-xs">📍 {event.location.fullAddress}</Text>
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
+                        ))}
+
+                        {/* View More Button */}
+                        {events.length > MAX_VISIBLE_EVENTS && (
+                            <TouchableOpacity onPress={() => setShowAllEvents(!showAllEvents)} className="mt-2">
+                                <Text className="text-blue-500 text-center font-pmedium">
+                                    {showAllEvents ? "View Less" : "View More"}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
                     <View style={styles.separator} className="mt-4 mb-3" />
 
-                    <View className="flex-row items-center justify-center pb-3">
+                    {!isMyChannel && (
+                        <View className="flex-row items-center justify-center pb-3">
+                            { !mySubscription && 
                                 <CustomButton
                                     title="Subscribe Now!"
                                     handlePress={handleSubmit}
@@ -218,13 +501,36 @@ const ChannelInfo = () => {
                                     textStyles="text-base"
                                     isLoading={isSubmitting}
                                 />
-                            </View>
+                            }
+                            { mySubscription && mySubscription.status === 'pending' &&
+                                <CustomButton
+                                    title="Pending"
+                                    handlePress={handleSubmit}
+                                    containerStyles="w-1/2 mt-0 rounded-lg"
+                                    textStyles="text-base"
+                                    isLoading={isSubmitting}
+                                    disabled={true}
+                                />
+                            }
+                            { mySubscription && mySubscription.status === 'subscribed' &&
+                                <CustomButton
+                                    title="Unsubscribe"
+                                    handlePress={handleSubmit}
+                                    containerStyles="w-1/2 mt-0 rounded-lg bg-primary"
+                                    textStyles="text-base text-black"
+                                    isLoading={isSubmitting}
+                                />
+                            }
+                            </View>)
+                    }
 
                 </ScrollView>
             </SafeAreaView>
 
+            <UserProfileBottomSheet ref={bottomSheetRef} onClose={handleBottomSheetClose}/>
+
             <StatusBar backgroundColor='#ffffff' style='auto' hidden={false} translucent={false} />
-        </>
+        </GestureHandlerRootView>
     )
 }
 

@@ -7,32 +7,33 @@ import * as api from '../../api';
 import CustomButton from '../../components/CustomButton';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useGlobalContext } from '../../context/GlobalProvider';
-
+import UserProfileBottomSheet from '../../components/UserProfileBottomSheet';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { icons, images } from '../../constants';
 
-const AttendeesProfileImages = ({ profileUrls }) => {
+const AttendeesProfileImages = ({ profiles }) => {
     return (
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          {profileUrls.slice(0, 4).map((url, index) => (
+          {profiles.slice(0, 3).map((profile, index) => (
             <Image
               key={index}
-              source={{ uri: url }}
+              source={{ uri: profile.profileImgUrl? profile.profileImgUrl : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }}
               style={{
-                width: 44,
-                height: 44,
-                borderRadius: 25,
-                marginLeft: index === 0 ? 0 : -10, // Overlapping effect
+                width: 56,
+                height: 56,
+                borderRadius: 50,
+                marginLeft: index === 0 ? 0 : -14, // Overlapping effect
                 borderWidth: 2,
                 borderColor: "white",
               }}
             />
           ))}
-          {profileUrls.length > 4 && (
+          {profiles.length > 3 && (
             <View
               style={{
-                width: 44,
-                height: 44,
-                borderRadius: 25,
+                width: 56,
+                height: 56,
+                borderRadius: 50,
                 marginLeft: -10,
                 backgroundColor: "#555",
                 justifyContent: "center",
@@ -42,7 +43,7 @@ const AttendeesProfileImages = ({ profileUrls }) => {
               }}
             >
               <Text style={{ color: "white", fontWeight: "bold", fontSize: 14 }}>
-                +{profileUrls.length - 4}
+                +{profiles.length - 3}
               </Text>
             </View>
           )}
@@ -51,6 +52,7 @@ const AttendeesProfileImages = ({ profileUrls }) => {
 };
 
 const EventInfo = () => {
+    const [userId, setUserId] = useState(null);
     const { eventId } = useLocalSearchParams(); // Get eventId from URL
     const { starredEvents, setIsEventStarred } = useGlobalContext();
     const [ event, setEvent ] = useState(null);
@@ -59,12 +61,71 @@ const EventInfo = () => {
     const textRef = useRef();
     const [organizerProfile, setOrganizerProfile] = useState(null);
     const [attendeesProfile, setAttendeesProfile] = useState(null);
+    const [pendingProfiles, setPendingProfiles] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [channel, setChannel] = useState(null);
     const [myRSVP, setMyRSVP] = useState(null);
-    
+    const [mySubscription, setMySubscription] = useState(null);
+    const [isMyEvent, setIsMyEvent] = useState(false);
+    const [pendingRSVP, setPendingRSVP] = useState(false);
+    const [showPendingRSVP, setShowPendingRSVP] = useState(false);
+    const bottomSheetRef = useRef(null);
+    const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
 
     const isEventStarred = starredEvents[eventId] || false;  
+
+    const [shouldRerender, setShouldRerender] = useState(false);
+
+    useEffect(() => {
+        setShouldRerender(prev => !prev); // Toggle state to trigger re-render
+    }, [isBottomSheetOpen, pendingRSVP, attendeesProfile]); // Runs every time bottom sheet opens/closes
+
+    const handleBottomSheetClose = () => {
+        setIsBottomSheetOpen(false);
+    };
+
+    const handleOpenBottomSheet = () => {
+        setIsBottomSheetOpen(true);
+        bottomSheetRef.current?.open();
+    };
+
+    useEffect(() => {
+        const fetchPendingRSVP = async () => {
+            try {
+                const response = await api.rsvp.getPendingByEventId(eventId);
+                setPendingRSVP(response.data);
+            } catch (error) {
+                console.error('Failed to fetch event:', error);
+            }
+        };
+        fetchPendingRSVP();
+    }, [eventId, isBottomSheetOpen]);
+
+    useEffect(() => {
+        const fetchUserId = async () => {
+            try {
+                const storedUser = await AsyncStorage.getItem('user');
+                if (!storedUser) {
+                    console.error('User not found in storage');
+                    return;
+                }
+                const parsedUser = JSON.parse(storedUser);
+                setUserId(parsedUser.accountId);
+            } catch (error) {
+                console.error('Error fetching user:', error);
+            }
+        };
+        fetchUserId();
+    }, [eventId]);
+
+    useEffect(() => {
+            if(!userId) return;
+            if(!event) return;
+            if(!event.organizerId) return;
+            if(Number(userId) === Number(event.organizerId)){ 
+                setIsMyEvent(true);
+            }
+    }, [event, userId]);
 
     useEffect(() => {
         // Only reset starred state if this is the first time visiting the event
@@ -162,12 +223,12 @@ const EventInfo = () => {
         if(!event) return;
         const fetchEventAttendeesProfile = async () => {
             try {
-                const response = await api.rsvp.getByEventId(eventId);
+                const response = await api.rsvp.getApprovedByEventId(eventId);
                 const attendees = response.data;
                 const attendeesProfile = [];
                 for (const attendee of attendees) {
-                    const response = await api.user.getProfileUrlbyId(attendee.accountId);
-                    attendeesProfile.push(response.data.profile_img_url);
+                    const response = await api.user.getProfilebyId(attendee.accountId);
+                    attendeesProfile.push(response.data);
                 }
                 setAttendeesProfile(attendeesProfile);
             } catch (error) {
@@ -175,7 +236,43 @@ const EventInfo = () => {
             }
         };
         fetchEventAttendeesProfile();
-    },[event]);
+    },[event, isBottomSheetOpen]);
+
+    useEffect(() => {
+        if(!event) return;
+        if(!pendingRSVP) return;
+        const fetchEventPendingProfiles = async () => {
+            try {
+                const pendingProfiles = [];
+                for (const pending of pendingRSVP) {
+                    const response = await api.user.getProfilebyId(pending.accountId);
+                    pendingProfiles.push(response.data);
+                }
+                setPendingProfiles(pendingProfiles);
+            } catch (error) {
+                console.error('Failed to fetch event:', error);
+            }
+        };
+        fetchEventPendingProfiles();
+    },[pendingRSVP, isBottomSheetOpen]);
+
+
+    useEffect(() => {
+        if(!event) return;
+        const fetchMySubscription = async () => {
+            try {
+                const storedUser = await AsyncStorage.getItem('user');
+                if (storedUser) {
+                    const parsedUser = JSON.parse(storedUser);
+                    const response = await api.subscription.getSubscribedByChannelIdAndAccountId(parsedUser.accountId, event.channelId);
+                    setMySubscription(response.data);
+                }
+            } catch (error) {
+                console.error('Failed to load user from storage:', error);
+            }
+        };
+        fetchMySubscription();
+    }, [event]);
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
@@ -187,7 +284,21 @@ const EventInfo = () => {
                 return;
             }
             const parsedUser = JSON.parse(storedUser);
-            if(!myRSVP && event.autoApprove === false){
+            if(!myRSVP && !mySubscription && channel && channel.privacy === 'private'){
+                Alert.alert("RSVP Request", "This is a private channel's event. You need to subscribe to the channel first before RSVP to this event.");
+            }else if(!myRSVP && event.maxParticipants && attendeesProfile.length >= event.maxParticipants){
+                Alert.alert(
+                    'RSVP Request',
+                    'Sorry, this event is full. You can\'t RSVP to this event anymore.',
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => setIsSubmitting(false),
+                            style: 'cancel'
+                        }
+                    ]
+                )
+            }else if(!myRSVP && event.autoApprove === false){
                 Alert.alert(
                     'RSVP Request',
                     'Are you sure you want to RSVP to this event?',
@@ -270,7 +381,7 @@ const EventInfo = () => {
 
 
     return (
-        <>
+        <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaView className="flex-1 bg-white h-full">
                 <ScrollView>
                     <View className="w-full h-60 bg-white">
@@ -312,11 +423,11 @@ const EventInfo = () => {
                                 </View>
                             </View>
                         </TouchableOpacity>
-                        <TouchableOpacity className="mb-4"onPress={ () => {
+                        <TouchableOpacity className="mb-2"onPress={ () => {
                             if (!channel) return;
                              router.push(`/channel-info?channelId=${channel.channelId}`);
                         }}>
-                            <View className="mb-4 space-y-1">
+                            <View className="mb-2 space-y-1">
                                 {channel && <Text className="font-pbold text-sm text-gray-700">{channel.channelName}</Text>}
                                 {channel && <Text className="text-gray-600 text-xs font-pmedium">{channel.privacy === 'private' ? 'Private Channel' : 'Public Channel'} </Text>}
                             </View>
@@ -349,18 +460,105 @@ const EventInfo = () => {
                             <Text className="font-pbold text-xl text-gray-700">Hosted By</Text>
                             <View className="flex-row">
                                 { organizerProfile && 
-                                    <Image source={{ uri: organizerProfile }} className="w-11 h-11 rounded-full ml-0"
+                                    <Image source={{ uri: organizerProfile? organizerProfile: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }} className="w-14 h-14 rounded-full ml-0"
                                 /> }
                             </View>
                         </View>
-                        <View className="space-y-2" style={{ flex: 0.5, alignItems: 'flex-start' }}>
-                            <Text className="font-pbold text-xl text-gray-700">Attendees({attendeesProfile?.length}/{event?.maxParticipants})</Text>
-                            <View className="flex-row">
-                                { attendeesProfile && 
-                                    <AttendeesProfileImages profileUrls={attendeesProfile} /> }
+                        { !isMyEvent && (
+                            <View className="space-y-2" style={{ flex: 0.5, alignItems: 'flex-start' }}>
+                                <Text className="font-pbold text-xl text-gray-700">Attendees({attendeesProfile?.length}/{event?.maxParticipants})</Text>
+                                <View className="flex-row">
+                                    { attendeesProfile && 
+                                        <AttendeesProfileImages profiles={attendeesProfile} /> }
+                                </View>
                             </View>
-                        </View>
+                        )}
+
                     </View>
+
+                    { isMyEvent && (
+                        <>
+                            <View style={styles.separator} className="mt-3 mb-2" />
+                            <Text className="mx-4 my-2 font-pbold text-xl text-gray-700">Attendees({attendeesProfile?.length}/{event?.maxParticipants})</Text>
+                            <View className="mx-4 mb-2 flex-row space-x-0">
+                                <View shouldRerender={shouldRerender} style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center" }}>
+                                        {attendeesProfile?.map((profile, index) => (
+                                            <TouchableOpacity key={index} onPress={() => {
+                                                bottomSheetRef.current?.setUserProfile(profile);
+                                                bottomSheetRef.current?.setType('attendees');
+                                                bottomSheetRef.current?.setToDo('view');
+                                                bottomSheetRef.current?.setData(eventId);
+                                                handleOpenBottomSheet();
+                                             }}>
+                                                <Image
+                                                key={index}
+                                                source={{ uri: profile.profileImgUrl? profile.profileImgUrl : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }}
+                                                style={{
+                                                    width: 60,
+                                                    height: 60,
+                                                    borderRadius: 50,
+                                                    margin: 4, // Space between images
+                                                    borderWidth: 2,
+                                                    borderColor: "white",
+                                                }}
+                                                />
+                                            </TouchableOpacity>
+                                        ))}
+                                        </View>
+                            </View>
+                            {showPendingRSVP && (
+                                <>
+                                <View style={styles.separator} className="mt-3 mb-2" />
+                                    <Text className="mx-4 my-2 font-pbold text-xl text-gray-700">Requests({pendingProfiles?.length})</Text>
+                                    <View className="mx-4 mb-2 flex-row space-x-0">
+                                        <View shouldRerender={shouldRerender} style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center" }}>
+                                            {pendingProfiles?.map((profile, index) => (
+                                                <TouchableOpacity key={index} onPress={() => { 
+                                                    bottomSheetRef.current?.setUserProfile(profile);
+                                                    bottomSheetRef.current?.setType('rsvp');
+                                                    bottomSheetRef.current?.setToDo('edit');
+                                                    bottomSheetRef.current?.setData(eventId);
+                                                    handleOpenBottomSheet();
+                                                }}>
+                                                    <Image
+                                                    key={index}
+                                                    source={{ uri: profile.profileImgUrl? profile.profileImgUrl : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }}
+                                                    style={{
+                                                        width: 60,
+                                                        height: 60,
+                                                        borderRadius: 50,
+                                                        margin: 4, // Space between images
+                                                        borderWidth: 2,
+                                                        borderColor: "white",
+                                                    }}
+                                                    />
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                </View>
+                                </>
+                            )}
+                            <TouchableOpacity onPress={async () => { 
+                                    setShowPendingRSVP(!showPendingRSVP);
+                                    const fetchPendingRSVP = async () => {
+                                        try {
+                                            const response = await api.rsvp.getPendingByEventId(eventId);
+                                            setPendingRSVP(response.data);
+                                        } catch (error) {
+                                            console.error('Failed to fetch event:', error);
+                                        }
+                                    };
+                                    await fetchPendingRSVP();
+                                }} 
+                                className="mt-2">
+                                <Text className="text-blue-500 text-center font-pmedium">
+                                    {showPendingRSVP ? "Hide Pending RSVP(s)" : "Show Pending RSVP(s)"}
+                                </Text>
+                            </TouchableOpacity>
+                        </>
+                        
+
+                    )}
 
                     <View style={styles.separator} className="mt-3 mb-2" />
 
@@ -396,56 +594,60 @@ const EventInfo = () => {
                         </View>
                     </View>
 
-                    <View style={styles.separator} className="mt-0 mb-0" />
+                    <View style={styles.separator} className="mt-0 mb-2" />
                     
 
-                    <View className="mx-4 flex-row space-x-0">
-                        <View style={{ flex: 1, alignItems: 'flex-start', justifyContent: 'center' }}>
-                        <Text className="font-pbold text-base text-gray-700"> Hurry up~</Text>
-                            <Text className="font-pbold text-base text-gray-700"> {event?.maxParticipants - attendeesProfile?.length} spot(s) left!</Text>
-                        </View>
-                        <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                            <View className="flex-row items-center justify-center pb-4 pt-4">
-                                { myRSVP && myRSVP.status === 'approved' && 
-                                    <CustomButton
-                                        title="Cancel RSVP"
-                                        handlePress={handleSubmit}
-                                        containerStyles="w-4/5 mt-0 rounded-lg bg-primary"
-                                        textStyles="text-base text-black"
-                                        isLoading={isSubmitting}
+                    { !isMyEvent && (
+                        <View className="mx-4 flex-row space-x-0 mb-2">
+                            <View style={{ flex: 1, alignItems: 'flex-start', justifyContent: 'center' }}>
+                            <Text className="font-pbold text-base text-gray-700"> Hurry up~</Text>
+                                <Text className="font-pbold text-base text-gray-700"> {event?.maxParticipants - attendeesProfile?.length} spot(s) left!</Text>
+                            </View>
+                            <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                                <View className="flex-row items-center justify-center pb-4 pt-4">
+                                    { myRSVP && myRSVP.status === 'approved' && 
+                                        <CustomButton
+                                            title="Cancel RSVP"
+                                            handlePress={handleSubmit}
+                                            containerStyles="w-4/5 mt-0 rounded-lg bg-primary"
+                                            textStyles="text-base text-black"
+                                            isLoading={isSubmitting}
+                                        />
+                                    }
+                                    {
+                                        myRSVP && myRSVP.status === 'pending' &&
+                                        <CustomButton
+                                            title="Pending"
+                                            handlePress={handleSubmit}
+                                            containerStyles="w-4/5 mt-0 rounded-lg"
+                                            textStyles="text-base"
+                                            isLoading={isSubmitting}
+                                            disabled={true}
+                                        />
+                                    }
+                                    {
+                                        !myRSVP &&
+                                        <CustomButton
+                                            title="RSVP"
+                                            handlePress={handleSubmit}
+                                            containerStyles="w-3/5 mt-0 rounded-lg"
+                                            textStyles="text-base"
+                                            isLoading={isSubmitting}
                                     />
-                                }
-                                {
-                                    myRSVP && myRSVP.status === 'pending' &&
-                                    <CustomButton
-                                        title="Pending"
-                                        handlePress={handleSubmit}
-                                        containerStyles="w-4/5 mt-0 rounded-lg"
-                                        textStyles="text-base"
-                                        isLoading={isSubmitting}
-                                        disabled={true}
-                                    />
-                                }
-                                {
-                                    !myRSVP &&
-                                    <CustomButton
-                                        title="Join & RSVP"
-                                        handlePress={handleSubmit}
-                                        containerStyles="w-4/5 mt-0 rounded-lg"
-                                        textStyles="text-base"
-                                        isLoading={isSubmitting}
-                                />
-                                }
-                                
+                                    }
+                                    
+                                </View>
                             </View>
                         </View>
-                    </View>
+                    )}
                     
                 </ScrollView>
             </SafeAreaView>
 
+            <UserProfileBottomSheet ref={bottomSheetRef} onClose={handleBottomSheetClose}/>
+
         <StatusBar backgroundColor='#ffffff' style='auto' hidden={false} translucent={false} />
-        </>
+        </GestureHandlerRootView>
     );
     };
 

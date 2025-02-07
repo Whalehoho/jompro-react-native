@@ -10,6 +10,26 @@ export const getByEventId = async (eventId) => {
     }
 }
 
+export const getApprovedByEventId = async (eventId) => {
+    try {
+        const response = await apiClient.get(`/rsvp/getApprovedByEventId/${eventId}`, { timeout: 10000 });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching RSVPs:', error);
+        throw error;
+    }
+}
+
+export const getPendingByEventId = async (eventId) => {
+    try {
+        const response = await apiClient.get(`/rsvp/getPendingByEventId/${eventId}`, { timeout: 10000 });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching RSVPs:', error);
+        throw error;
+    }
+}
+
 export const getByEventIdAndAccountId = async (eventId, accountId) => {
     try {
         const response = await apiClient.get(`/rsvp/getByEventIdAndAccountId/${eventId}/${accountId}`, { timeout: 10000 });
@@ -27,6 +47,16 @@ export const createRsvp = async (rsvpData) => {
         return response.data;
     } catch (error) {
         console.error('Error creating RSVP:', error);
+        throw error;
+    }
+}
+
+export const approveRsvp = async (rsvpId) => {
+    try {
+        const response = await apiClient.put(`/rsvp/approve/${rsvpId}`, { timeout: 10000 });
+        return response.data;
+    } catch (error) {
+        console.error('Error approving RSVP:', error);
         throw error;
     }
 }

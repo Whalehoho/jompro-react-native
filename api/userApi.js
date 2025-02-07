@@ -93,4 +93,14 @@ export const getProfileUrlbyId = async (accountId) => {
   }
 }
 
+export const getProfilebyId = async (accountId) => {
+  try {
+    const response = await apiClient.get(`/user/accountId/${accountId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    throw error;
+  }
+}
+
 
