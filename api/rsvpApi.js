@@ -53,7 +53,6 @@ export const getByEventIdAndAccountId = async (eventId, accountId) => {
 export const createRsvp = async (rsvpData) => {
     try {
         const response = await apiClient.post(`/rsvp/create`, rsvpData, { timeout: 10000 });
-        console.log('response', response.data);
         return response.data;
     } catch (error) {
         console.error('Error creating RSVP:', error);

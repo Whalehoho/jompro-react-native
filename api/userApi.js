@@ -24,7 +24,6 @@ export const getAllUsers = async () => {
 export const updateProfileImage = async (userData) => {
   try {
     const response = await apiClient.put('/user/updateProfileImg', userData);
-    console.log('response', response.data);
     return response.data;
   } catch (error) {
     console.error('Error updating user:', error);

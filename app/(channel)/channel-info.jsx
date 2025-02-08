@@ -468,7 +468,11 @@ const ChannelInfo = () => {
                                             {new Date(event.startTime * 1000).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Kuala_Lumpur' })}
                                         </Text>
                                         <Text className="font-psemibold text-sm text-secondary-100">
-                                            {new Date(event.startTime * 1000).toLocaleDateString('en-US', { timeZone: 'Asia/Kuala_Lumpur' })}
+                                            {new Date(event.startTime * 1000).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })}
                                         </Text>
                                         <Text className="text-gray-600 text-xs font-pregular">
                                             {new Date(event.startTime * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })}

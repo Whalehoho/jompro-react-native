@@ -8,7 +8,6 @@ import Dialog from "react-native-dialog";
 import { icons } from '../../constants';
 import { Alert } from 'react-native'
 import { Calendar } from 'react-native-big-calendar';
-import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView, PanGestureHandler, State } from 'react-native-gesture-handler';
 import * as api from '../../api';
 import { Link, router, useLocalSearchParams } from 'expo-router';
@@ -331,28 +330,32 @@ const handleOnPressEvent = (event) => {
         <View className="flex-row justify-around bg-primary">
           <View className="flex-1 border-2 border-gray-800">
             <Text
-              onPress={() =>{ setShowRSVP(true); console.log('RSVP')}}
+              onPress={() =>{ setShowRSVP(true);}}
               className={`px-4 py-4 text-center ${
                 showRSVP ? 'bg-secondary-100 text-white' : 'text-gray-700'
               }`}
             >
-              My RSVPs
+              My RSVPs( {events?.filter((event) => {
+                return Number(userId) !== Number(event.organizerId);
+              }).length} )
             </Text>
           </View>
           <View className="flex-1 border-r-2 border-t-2 border-b-2 border-gray-800">
             <Text
-              onPress={() => { setShowRSVP(false); console.log('Events')}}
+              onPress={() => { setShowRSVP(false);}}
               className={`px-4 py-4 text-center ${
                 !showRSVP ? 'bg-secondary-100 text-white' : 'text-gray-700'
               }`}
             >
-              My Events
+              My Events( {events?.filter((event) => {
+                return Number(userId) === Number(event.organizerId);
+              }).length} )
             </Text>
           </View>
         </View>
 
         <ScrollView>
-          <View className="space-y-2">
+          <View>
             {
               events
               .filter((event) => {
@@ -371,7 +374,11 @@ const handleOnPressEvent = (event) => {
                             {new Date(event.start).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Kuala_Lumpur' })}
                         </Text>
                         <Text className="font-psemibold text-sm text-secondary-100">
-                            {new Date(event.start).toLocaleDateString('en-US', { timeZone: 'Asia/Kuala_Lumpur' })}
+                            {new Date(event.start).toLocaleDateString('en-GB', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                            })}
                         </Text>
                         <Text className="text-gray-600 text-xs font-pregular">
                             {new Date(event.start).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })}

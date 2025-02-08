@@ -48,6 +48,14 @@ const ProfileLayout = () => {
           }} 
         />
         <Stack.Screen 
+          name="my-subscriptions" 
+          options={{
+            headerShown: true,
+            headerTitle: () => <CustomHeaderTitle title="Channels" />,
+            headerShadowVisible: true,
+          }} 
+        />
+        <Stack.Screen 
           name="saved-addresses" 
           options={{
             headerShown: true,

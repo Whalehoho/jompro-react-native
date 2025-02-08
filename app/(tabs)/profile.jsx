@@ -116,7 +116,7 @@ const Profile = () => {
   const listItems = [
     { title: 'My Details', icon: icons.account, link: '/my-details' },
     { title: 'My Events & RSVP', icon: icons.rsvp, link: '/my-rsvps' },
-    { title: 'My Subscriptions', icon: icons.broadcast, link: '/settings' },
+    { title: 'My Channels & Subscriptions', icon: icons.broadcast, link: '/my-subscriptions' },
     { title: 'My Addresses', icon: icons.location, link: '/saved-addresses' },
     { title: 'Verification', icon: icons.faceId, link: '/liveness-verification' },
     
