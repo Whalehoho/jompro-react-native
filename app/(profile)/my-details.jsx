@@ -118,7 +118,7 @@ const MyDetails = () => {
 
   return (
     <>
-    <SafeAreaView className="flex-1 bg-white h-full">
+    <SafeAreaView className="flex-1 bg-primary h-full">
       <ScrollView>
         <View className="w-full min-h-[85vh] px-4">
           <FormField
@@ -126,7 +126,7 @@ const MyDetails = () => {
             value={form.userName}
             handleChangeText={(e) => setForm({ ...form, userName: e })}
             titleStyle={'text-black'}
-            boxStyle={'border-gray-200 bg-gray-200 rounded-sm h-14 px-4'}
+            boxStyle={'border-gray-800 bg-gray-200 rounded-sm h-14 px-4'}
             otherStyles="mt-7 space-y-1"
           />
           <FormField
@@ -134,7 +134,7 @@ const MyDetails = () => {
             value={form.email}
             handleChangeText={(e) => setForm({ ...form, email: e })}
             titleStyle={'text-black'}
-            boxStyle={'border-gray-200 bg-gray-200 rounded-sm h-14 px-4'}
+            boxStyle={'border-gray-800 bg-gray-200 rounded-sm h-14 px-4'}
             otherStyles="mt-5 space-y-1"
             keyboardType="email-address"
           />
@@ -144,8 +144,8 @@ const MyDetails = () => {
             value={form.newPassword}
             handleChangeText={(e) => setForm({ ...form, newPassword: e })}
             titleStyle={'text-black'}
-            subtitleStyle={'mb-1'}
-            boxStyle={'border-gray-200 bg-gray-200 rounded-sm h-14 px-4'}
+            subtitleStyle={'mb-1 text-secondary'}
+            boxStyle={'border-gray-800 bg-gray-200 rounded-sm h-14 px-4'}
             otherStyles="mt-5 space-y-1"
           />
           <FormField
@@ -153,7 +153,7 @@ const MyDetails = () => {
             value={`${form.age}`} 
             handleChangeText={(e) => setForm({ ...form, age: e })}
             titleStyle={'text-black'}
-            boxStyle={'border-gray-200 bg-gray-200 rounded-sm h-14 px-4'}
+            boxStyle={'border-gray-800 bg-gray-200 rounded-sm h-14 px-4'}
             otherStyles="mt-5 space-y-1"
             keyboardType="numeric"
           />
@@ -165,8 +165,8 @@ const MyDetails = () => {
             <TouchableOpacity
               className={`flex-1 py-4 items-center border-2 rounded-lg mx-1 ${
                 gender?
-                (gender === 'Male' ? 'bg-primary border-primary' : 'border-gray-300') :
-                (user?.gender === 'Male' ? 'bg-primary border-primary' : 'border-gray-300')
+                (gender === 'Male' ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800') :
+                (user?.gender === 'Male' ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800')
               }`}
               onPress={() => setGender('Male')}
             >
@@ -184,8 +184,8 @@ const MyDetails = () => {
             <TouchableOpacity
               className={`flex-1 py-4 items-center border-2 rounded-lg mx-1 ${
                 gender?
-                (gender === 'Female' ? 'bg-primary border-primary' : 'border-gray-300') :
-                (user?.gender === 'Female' ? 'bg-primary border-primary' : 'border-gray-300')
+                (gender === 'Female' ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800') :
+                (user?.gender === 'Female' ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800')
               }`}
               onPress={() => setGender('Female')}
             >
@@ -203,8 +203,8 @@ const MyDetails = () => {
             <TouchableOpacity
               className={`flex-1 py-4 items-center border-2 rounded-lg mx-1 ${
                 gender?
-                (gender === 'Unknown' ? 'bg-primary border-primary' : 'border-gray-300') :
-                (user?.gender === 'Unknown' ? 'bg-primary border-primary' : 'border-gray-300')
+                (gender === 'Unknown' ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800') :
+                (user?.gender === 'Unknown' ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800')
               }`}
               onPress={() => setGender('Unknown')}
             >

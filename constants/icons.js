@@ -62,6 +62,13 @@ import calendar2 from "../assets/icons/calendar(2).png";
 import list from "../assets/icons/list.png";
 import back from "../assets/icons/back.png";
 import forward from "../assets/icons/forward.png";
+import smile from "../assets/icons/smile.png";
+import lookLeft from "../assets/icons/look-left.png";
+import lookRight from "../assets/icons/look-right.png";
+import lookUp from "../assets/icons/look-up.png";
+import lookDown from "../assets/icons/look-down.png";
+import blink from "../assets/icons/blink.png";
+import ok from "../assets/icons/ok.png";
 
 export default {
   play,
@@ -128,4 +135,11 @@ export default {
   list,
   back,
   forward,
+  smile,
+  lookLeft,
+  lookRight,
+  lookUp,
+  lookDown,
+  blink,
+  ok,
 };

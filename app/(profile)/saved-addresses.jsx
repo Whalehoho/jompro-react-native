@@ -128,7 +128,7 @@ const SavedAddresses = () => {
 
 
   const renderAddress = ({ item }) => (
-    <View className="flex-row justify-between items-center border-b border-gray-200 py-2">
+    <View className="flex-row justify-between items-center bg-primary border-b border-gray-800 py-2">
       <View className="flex-1"> 
         <View className="flex-row justify-between items-center gap-5">
           {/* <Image source={icons.location} className="w-6 h-6" /> */}
@@ -237,7 +237,7 @@ const SavedAddresses = () => {
 
   return (
     <>
-      <SafeAreaView className="flex-1 bg-white h-full">
+      <SafeAreaView className="flex-1 bg-primary h-full">
         <View className="w-full min-h-[85vh] px-4">
           {/* FlatList to render dynamic addresses */}
           <FlatList

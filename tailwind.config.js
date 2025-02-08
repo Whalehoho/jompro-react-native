@@ -21,6 +21,7 @@ module.exports = {
         },
       },
       fontFamily: {
+        cregular: ["Combo-Regular", "sans-serif"],
         pthin: ["Poppins-Thin", "sans-serif"],
         pextralight: ["Poppins-ExtraLight", "sans-serif"],
         plight: ["Poppins-Light", "sans-serif"],

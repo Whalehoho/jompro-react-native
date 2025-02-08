@@ -151,7 +151,7 @@ const MySubscriptions = () => {
               myChannels?.map((channel, index) => (
                 <TouchableOpacity key={index} className="border-b border-black" onPress={() => { router.push(`/channel-info?channelId=${channel.channelId}`) }}>
                   <View className="flex-row">
-                    <View className="my-4 space-y-2 flex-[0.3] border-r border-black items-center justify-center">
+                    <View className="my-4 space-y-2 flex-[0.4] border-r border-black items-center justify-center">
                         <Image 
                           source={categories.find(cat => cat.title === channel.category).icon} 
                           className="w-12 h-12" 
@@ -177,7 +177,7 @@ const MySubscriptions = () => {
               mySubscribedChannels?.map((channel, index) => (
                 <TouchableOpacity key={index} className="border-b border-black" onPress={() => { router.push(`/channel-info?channelId=${channel.channelId}`) }}>
                   <View className="flex-row">
-                    <View className="my-4 space-y-2 flex-[0.3] border-r border-black items-center justify-center">
+                    <View className="my-4 space-y-2 flex-[0.4] border-r border-black items-center justify-center">
                         <Image 
                           source={categories.find(cat => cat.title === channel.category).icon} 
                           className="w-12 h-12" 

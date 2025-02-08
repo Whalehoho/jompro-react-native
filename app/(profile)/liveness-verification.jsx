@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { SafeAreaView, Dimensions, View, Text } from 'react-native';
+import { SafeAreaView, Dimensions, View, Text, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Camera, useCameraDevice, useCameraFormat, useFrameProcessor, useSkiaFrameProcessor } from 'react-native-vision-camera';
 import { useFaceDetector, FaceDetectionOptions } from 'react-native-vision-camera-face-detector';
@@ -8,6 +8,9 @@ import { Skia, Canvas, Paint, Circle as SkiaCircle } from '@shopify/react-native
 import Animated, { useSharedValue, useAnimatedProps, withTiming } from 'react-native-reanimated';
 import ImageEditor from '@react-native-community/image-editor';
 import RNFS from 'react-native-fs';
+import { icons } from '../../constants';
+import { Alert } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 
 
 import * as api from '../../api'
@@ -23,6 +26,7 @@ const LivenessVerification = () => {
 
     const device = useCameraDevice('front');
     const camera = useRef(null);
+    const isFocused = useIsFocused();
 
     const faceDetectionOptions = useRef( {
         // see FaceDetectionOptions
@@ -38,7 +42,9 @@ const LivenessVerification = () => {
 
     const [actionIndex, setActionIndex] = useState(0);
 
-    const actionToPerform = ['blink', 'smile', 'look left', 'look right', 'look up', 'look down'];
+    const actionToPerform = ['Blink', 'Smile', 'Look Left', 'Look Right', 'Look Up', 'Look Down'];
+
+    const demo = [icons.blink, icons.smile, icons.lookLeft, icons.lookRight, icons.lookUp, icons.lookDown, icons.ok];
 
     const ratio = 0.43;
 
@@ -94,35 +100,36 @@ const LivenessVerification = () => {
 
             // Check if the action is performed and move to the next action
             switch(actionToPerform[actionIndex]) {
-                case 'blink':
+                case 'Blink':
                     if(firstFace.leftEyeOpenProbability < 0.2 && firstFace.rightEyeOpenProbability < 0.2) {
                         setActionIndex(actionIndex + 1);
                     }
                     break;
-                case 'smile':
+                case 'Smile':
                     if(firstFace.smilingProbability > 0.8) {
                         setActionIndex(actionIndex + 1);
                     }
                     break;
-                case 'look left':
+                case 'Look Left':
                     if(firstFace.yawAngle > 20) {
                         setActionIndex(actionIndex + 1);
                     }
                     break;
-                case 'look right':
+                case 'Look Right':
                     if(firstFace.yawAngle < -20) {
                         setActionIndex(actionIndex + 1);
                     }
                     break;
-                case 'look up':
+                case 'Look Up':
                     if(firstFace.pitchAngle > 10) {
                         setActionIndex(actionIndex + 1);
                     }
                     break;
-                case 'look down':
+                case 'Look Down':
                     if(firstFace.pitchAngle < -10) {
                         setActionIndex(actionIndex + 1);
                         captureAndCropFace(firstFace.bounds);
+                        Alert.alert('Face biomeatric captured', 'Please wait while we verify your face, you can exit the screen now.');
                     }
                     break;
                 default:
@@ -216,7 +223,7 @@ const LivenessVerification = () => {
                     photo={true}
                     style={{ transform: [{ translateY: -(height / 4) }] }} /* Shift the camera feed upward by height/4 */
                     device={device}
-                    isActive={true}
+                    isActive={isFocused}
                     frameProcessor={frameProcessor}
                     frameProcessorFps={1}
                     photoQualityBalance={"speed"}
@@ -266,24 +273,22 @@ const LivenessVerification = () => {
                     />
                 </Svg>
 
-                
 
-                <View className="absolute w-full items-center" style={{ top: height / 4 + width * ratio + 50 }}>
+                <View className="absolute w-full items-center" style={{ top: height / 4 + width * ratio + 200 }}>
+                    <Image source={demo[actionIndex]}  className="w-28 h-28" />
+                </View>
+
+                <View className="absolute w-full items-center" style={{ top: height / 4 + width * ratio + 320 }}>
                     { 
                         actionIndex < actionToPerform.length ?
-                        <Text className="text-2xl text-black font-pmedium">Action to perform: {actionToPerform[actionIndex]}</Text>
-                        :<Text className="text-2xl text-black font-pmedium">✓✓✓</Text>
+                        <Text className="text-xl text-black font-pregular">{actionToPerform[actionIndex]}</Text>
+                        :<></>
                     }
                 </View>
 
-                <View className="absolute w-full items-center" style={{ top: height / 4 + width * ratio + 180 }}>
-                    <Text className="text-2xl text-black font-pmedium">{actionIndex}/{actionToPerform.length}</Text>
-                </View>
-
-                
-                <View className="absolute w-full items-center" style={{ top: height / 4 + width * ratio + 280 }}>
-                    <Text className="text-2xl text-black font-pmedium"> 
-                        {faceDetected ? 'Face detected' : 'No face detected'}
+                <View className="absolute w-[50%] p-2 items-center bg-primary rounded-lg border-2 border-black" style={{ top: height / 4 + width * ratio + 80, left: width / 4 }}>
+                    <Text className="text-lg text-black font-pmedium text-center"> 
+                        {faceDetected ? 'Face is Captured' : 'No Face Detected'}
                     </Text>
                 </View>
 
@@ -339,7 +344,7 @@ const LivenessVerification = () => {
 
             </SafeAreaView>
 
-            <StatusBar backgroundColor='#836eca' style='auto' hidden={false} translucent={false} />
+            {/* <StatusBar backgroundColor='#836eca' style='auto' hidden={false} translucent={false} /> */}
 
         </>
 
