@@ -20,6 +20,16 @@ export const getApprovedByEventId = async (eventId) => {
     }
 }
 
+export const getApprovedByAccountId = async (accountId) => {
+    try {
+        const response = await apiClient.get(`/rsvp/getApprovedByAccountId/${accountId}`, { timeout: 10000 });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching RSVPs:', error);
+        throw error;
+    }
+}
+
 export const getPendingByEventId = async (eventId) => {
     try {
         const response = await apiClient.get(`/rsvp/getPendingByEventId/${eventId}`, { timeout: 10000 });

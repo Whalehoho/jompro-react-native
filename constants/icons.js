@@ -57,6 +57,11 @@ import broadcast from "../assets/icons/broadcast.png";
 import party from "../assets/icons/party.png";
 import star from "../assets/icons/star.png";
 import unstar from "../assets/icons/unstar.png";
+import rsvp from "../assets/icons/rsvp.png";
+import calendar2 from "../assets/icons/calendar(2).png";
+import list from "../assets/icons/list.png";
+import back from "../assets/icons/back.png";
+import forward from "../assets/icons/forward.png";
 
 export default {
   play,
@@ -118,4 +123,9 @@ export default {
   party,
   star,
   unstar,
+  rsvp,
+  calendar2,
+  list,
+  back,
+  forward,
 };

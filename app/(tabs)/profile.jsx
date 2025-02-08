@@ -43,7 +43,9 @@ const Profile = () => {
     fetchUserData();
   }, []);
 
-  const handleProfileImageUpload = async () => {
+
+
+  const handleProfileImageUploadViaImgbb = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
   
     if (permissionResult.granted === false) {
@@ -113,48 +115,49 @@ const Profile = () => {
 
   const listItems = [
     { title: 'My Details', icon: icons.account, link: '/my-details' },
-    { title: 'Saved Addresses', icon: icons.location, link: '/saved-addresses' },
-    { title: 'Liveness Verification', icon: icons.faceId, link: '/liveness-verification' },
-    { title: 'Notifications', icon: icons.notification, link: '/notifications' },
-    { title: 'Settings', icon: icons.settings, link: '/settings' },
+    { title: 'My Events & RSVP', icon: icons.rsvp, link: '/my-rsvps' },
+    { title: 'My Subscriptions', icon: icons.broadcast, link: '/settings' },
+    { title: 'My Addresses', icon: icons.location, link: '/saved-addresses' },
+    { title: 'Verification', icon: icons.faceId, link: '/liveness-verification' },
+    
   ];
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 ">
       <ScrollView contentContainerStyle={{ padding: 10, flexGrow: 1 }}>
         <TouchableOpacity
               onPress={handleLogout}
-              className="flex w-full items-end mb-6"
+              className="flex w-full items-end mt-1 mb-0"
         >
           <Image
             source={icons.logout}
             resizeMode="contain"
-            className="w-6 h-6"
+            className="w-9 h-9"
           />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={handleProfileImageUpload} className="items-center mb-5">
-          <View className="relative w-28 h-28 justify-center items-center">
-          <View
-            className="w-28 h-28 rounded-full border-1 border-gray-300 overflow-hidden"
-            style={{
-              opacity: loading ? 0.5 : 1,
-            }}
-          >
-            <Image
-              source={
-                profileImage
-                  ? { uri: profileImage }
-                  : user?.profileImgUrl
-                  ? { uri: user.profileImgUrl }
-                  : require('../../assets/icons/account.png')
-              }
-              className="w-28 h-28"
+        <TouchableOpacity onPress={handleProfileImageUploadViaImgbb} className="items-center mb-5">
+          <View className="relative w-40 h-40 justify-center items-center">
+            <View
+              className="w-40 h-40 rounded-full border-1 border-gray-300 overflow-hidden"
               style={{
-                tintColor: (!profileImage && !user?.profileImgUrl) ? '#5e40b7' : undefined,
+                opacity: loading ? 0.5 : 1,
               }}
-            />
-          </View>
+            >
+              <Image
+                source={
+                  profileImage
+                    ? { uri: profileImage }
+                    : user?.profileImgUrl
+                    ? { uri: user.profileImgUrl }
+                    : require('../../assets/icons/account.png')
+                }
+                className="w-40 h-40"
+                style={{
+                  tintColor: (!profileImage && !user?.profileImgUrl) ? '#5e40b7' : undefined,
+                }}
+              />
+            </View>
 
             {loading && (
               <View className="absolute inset-0 flex justify-center items-center">
@@ -162,15 +165,22 @@ const Profile = () => {
               </View>
             )}
           </View>
-          <Text className="text-xl text-gray-800 mt-3 font-psemibold">{user?.userName}</Text>
-          <Text className="text-sm text-gray-500 mt-2 italic font-pblack">@{user?.accountId}</Text>
+          
         </TouchableOpacity>
 
-        <View className="mt-3">
+        <View className="items-center mb-2">
+          <Text className="text-2xl text-gray-800 mt-0 mb-4 font-pblack">{user?.userName}</Text>
+          <View className="flex-row items-center bg-primary">
+            <Text className="text-xl text-gray-800  underline font-pbold text-center border-y-2 border-r-2 border-l-2 border-gray-800 p-1" style={{ flex: 1 }}>@{user?.accountId}</Text>
+            <Text className="text-xl text-gray-800  font-pbold text-center border-y-2 border-r-2 p-1" style={{ flex: 1 }}>Verified ✔</Text>
+          </View>
+        </View>
+
+        <View className="mt-3  border-2 border-gray-800 bg-primary">
           {listItems.map((item, index) => (
             <TouchableOpacity 
               key={index} 
-              className="flex-row items-center py-4 border-b border-gray-300"
+              className={`flex-row items-center py-4  ${index !== listItems.length - 1 ? 'border-b-2 border-gray-800' : ''}`}
               onPress={() => {
                 router.push(item.link);
               }}
@@ -178,11 +188,11 @@ const Profile = () => {
               <Image 
                 source={item.icon}
                 resizeMode='contain'
-                tintColor= '#5e40b7'
-                className="w-6 h-6 ml-2 mr-4"
+                tintColor= '#7257ca'
+                className="w-8 h-8 ml-2 mr-4"
               />
-              <Text className="text-base text-gray-800 font-pmedium">{item.title}</Text>
-              <Image source={icons.next} className="w-4 h-4 ml-auto mr-2" />
+              <Text className="text-xl text-gray-800 ml-auto">{item.title}</Text>
+              <Image source={icons.next} className="w-6 h-6 ml-auto mr-4" tintColor= '#7257ca'/>
             </TouchableOpacity>
           ))}
         </View>

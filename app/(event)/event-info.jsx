@@ -23,7 +23,7 @@ const AttendeesProfileImages = ({ profiles }) => {
                 height: 56,
                 borderRadius: 50,
                 marginLeft: index === 0 ? 0 : -14, // Overlapping effect
-                borderWidth: 2,
+                borderWidth: 1,
                 borderColor: "white",
               }}
             />
@@ -38,7 +38,7 @@ const AttendeesProfileImages = ({ profiles }) => {
                 backgroundColor: "#555",
                 justifyContent: "center",
                 alignItems: "center",
-                borderWidth: 2,
+                borderWidth: 1,
                 borderColor: "white",
               }}
             >
@@ -459,9 +459,17 @@ const EventInfo = () => {
                         <View className="space-y-2" style={{ flex: 0.5, alignItems: 'flex-start' }}>
                             <Text className="font-pbold text-xl text-gray-700">Hosted By</Text>
                             <View className="flex-row">
-                                { organizerProfile && 
-                                    <Image source={{ uri: organizerProfile? organizerProfile: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }} className="w-14 h-14 rounded-full ml-0"
-                                /> }
+                                <TouchableOpacity onPress={() => {
+                                    bottomSheetRef.current?.setUserProfile({ accountId: event.organizerId });
+                                    bottomSheetRef.current?.setType('organizer');
+                                    bottomSheetRef.current?.setToDo('view');
+                                    bottomSheetRef.current?.setData(eventId);
+                                    handleOpenBottomSheet();
+                                }}>
+                                    { organizerProfile && 
+                                        <Image source={{ uri: organizerProfile? organizerProfile: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }} className="w-14 h-14 rounded-full ml-0 border-white border-1"
+                                    /> }
+                                </TouchableOpacity>
                             </View>
                         </View>
                         { !isMyEvent && (

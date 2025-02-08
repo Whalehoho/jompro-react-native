@@ -370,11 +370,19 @@ const ChannelInfo = () => {
 
                     <View className="mx-4 space-y-2 mb-4" style={{ flex: 0.5, alignItems: 'flex-start' }}>
                         <Text className="font-pbold text-xl text-gray-700">Owner</Text>
-                        <View className="flex-row">
-                            { ownerProfile && 
-                                <Image source={{ uri: ownerProfile? ownerProfile : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }} className="w-14 h-14 rounded-full ml-0" />
-                             }
-                        </View>
+                        <TouchableOpacity onPress={() => {
+                            bottomSheetRef.current?.setUserProfile({accountId: channel.ownerId});
+                            bottomSheetRef.current?.setType("owner");
+                            bottomSheetRef.current?.setToDo("view");
+                            bottomSheetRef.current?.setData(channel.channelId);
+                            handleOpenBottomSheet();
+                        }}>
+                            <View className="flex-row">
+                                { ownerProfile && 
+                                    <Image source={{ uri: ownerProfile? ownerProfile : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }} className="w-14 h-14 rounded-full ml-0" />
+                                }
+                            </View>
+                        </TouchableOpacity>
                     </View>
 
                     <View style={styles.separator} className="mt-2 mb-4" />

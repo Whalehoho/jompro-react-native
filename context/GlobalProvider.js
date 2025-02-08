@@ -9,6 +9,7 @@ const GlobalProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [starredEvents, setStarredEvents] = useState({});
+    const [rsvpView, setRsvpView] = useState(0); // 0 = list, 1 = calendar
 
     useEffect(() => {
         // Retrieve isLoggedIn state from AsyncStorage when the app loads
@@ -69,6 +70,8 @@ const GlobalProvider = ({ children }) => {
                 logoutUser,
                 starredEvents,
                 setIsEventStarred,
+                rsvpView,
+                setRsvpView,
             }}
         >
             {children}
