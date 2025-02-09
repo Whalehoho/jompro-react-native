@@ -354,7 +354,7 @@ const NewEventForm = ({ onSubmit }) => {
         handleChangeText={(text) => setForm({ ...form, eventName: text })}
         placeholder="Add Event Name"
         titleStyle="text-black"
-        boxStyle="border-gray-200 bg-gray-200 rounded-sm h-14 px-4"
+        boxStyle="border-gray-800 bg-gray-200 rounded-sm h-14 px-4"
         otherStyles="mt-5 space-y-1"
         multiLine={true}
       />
@@ -366,7 +366,7 @@ const NewEventForm = ({ onSubmit }) => {
          multiLine={true}
          placeholder="Add Notes or Description"
          titleStyle="text-black"
-         boxStyle="border-gray-200 bg-gray-200 rounded-sm h-48 px-4 py-2 items-start"
+         boxStyle="border-gray-800 bg-gray-200 rounded-sm h-48 px-4 py-2 items-start"
          otherStyles="mt-5 space-y-1"
       />
       

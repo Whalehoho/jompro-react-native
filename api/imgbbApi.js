@@ -1,4 +1,4 @@
-import { IMGBB_API_KEY } from './apiConfig';
+import { IMGBB_API_KEY } from '../config';
 
 export const uploadImage = async (image) => {
     console.log('uploadImage:');

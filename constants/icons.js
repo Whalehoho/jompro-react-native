@@ -69,6 +69,7 @@ import lookUp from "../assets/icons/look-up.png";
 import lookDown from "../assets/icons/look-down.png";
 import blink from "../assets/icons/blink.png";
 import ok from "../assets/icons/ok.png";
+import send from "../assets/icons/send.png";
 
 export default {
   play,
@@ -142,4 +143,5 @@ export default {
   lookDown,
   blink,
   ok,
+  send,
 };

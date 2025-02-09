@@ -10,7 +10,6 @@ import { Alert } from 'react-native'
 import * as api from '../../api';
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { getChannelByChannelId } from '../../api/channelApi';
 
 const categories = [
   { title: 'Outdoor', icon: icons.outdoor },
