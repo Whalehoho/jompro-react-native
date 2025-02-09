@@ -56,7 +56,6 @@ const Chatroom = () => {
 
     setMessages([]); // Clear messages when changing channels
     setNewMessage(''); // Clear input when changing channels
-    setMyEvents([]); // Clear events when changing channels
     setSelectedEvent(null); // Clear selected event when changing channels
 
     const fetchUserId = async () => {
@@ -133,7 +132,7 @@ const Chatroom = () => {
   };
 
   const handleEventSelection = (event) => {
-    Alert.alert('Forward Event', `Are you sure you want to forward ${event.eventName} to this chat?`,
+    Alert.alert('Forward Event', `Are you sure you want to forward ${event.data.eventName} to this chat?`,
       [
         {
           text: 'Cancel',
@@ -355,10 +354,12 @@ const Chatroom = () => {
       <Modal visible={showModal} transparent={true} animationType="slide">
         <View className="flex-1 items-center justify-center bg-black/50">
           <View className="bg-white rounded-[10px] p-5 w-[300px] max-h-[400px]">
-            <Text className="text-lg font-pmedium text-black text-center">Forward Your Events</Text>
+            <Text className="text-lg font-psemibold text-black text-center">Forward Event Within Channel</Text>
+            <View style={styles.modalTitleseparator} />
+            { eventsInMessages.length > 0 && 
             <FlatList
-              data={myEvents}
-              keyExtractor={(item) => item.eventId.toString()}
+              data={eventsInMessages}
+              keyExtractor={(item) => item.data.eventId.toString()}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   className="flex-row items-center justify-between border-b border-gray-300 py-2"
@@ -366,11 +367,13 @@ const Chatroom = () => {
                     handleEventSelection(item);
                   }}
                 >
-                  <Text className="text-base font-pmedium text-black">{item.eventName}</Text>
+                  <Text className="text-base font-pmedium text-black">{item.data.eventName}</Text>
 
                 </TouchableOpacity>
               )}
-            />
+            />}
+            { eventsInMessages.length <= 0 && 
+              <Text className="text-base font-pmedium text-black text-center">You don't have any event hosted in this channel.</Text>}
             <CustomButton
               title="Close"
               handlePress={() => setShowModal(false)}
@@ -426,5 +429,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#888', // Timestamp color
   },
-
+  modalTitleseparator: {
+    height: 1,
+    backgroundColor: '#000',
+    marginVertical: 2
+  },
 });
