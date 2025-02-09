@@ -40,15 +40,17 @@ const Chatroom = () => {
 
 
   useEffect(() => {
-    const fetchMyEvents = async () => {
+    const fetchMyEventsInThisChannel = async () => {
       try {
         const response = await api.event.getActiveEventsByOrganizerId(userId);
-        setMyEvents(response.data);
+        // console.log('My events:', response.data);
+        const myEventsInThisChannel = response.data.filter((event) => event.channelId === channelId);
+        setMyEvents(myEventsInThisChannel);
       } catch (error) {
         console.error('Failed to fetch events:', error);
       }
     };
-    fetchMyEvents();
+    fetchMyEventsInThisChannel();
   }, [userId]);
 
 
@@ -132,7 +134,7 @@ const Chatroom = () => {
   };
 
   const handleEventSelection = (event) => {
-    Alert.alert('Forward Event', `Are you sure you want to forward ${event.data.eventName} to this chat?`,
+    Alert.alert('Forward Event', `Are you sure you want to forward ${event.eventName} to this chat?`,
       [
         {
           text: 'Cancel',
@@ -356,10 +358,10 @@ const Chatroom = () => {
           <View className="bg-white rounded-[10px] p-5 w-[300px] max-h-[400px]">
             <Text className="text-lg font-psemibold text-black text-center">Forward Event Within Channel</Text>
             <View style={styles.modalTitleseparator} />
-            { eventsInMessages.length > 0 && 
+            { myEvents.length > 0 && 
             <FlatList
-              data={eventsInMessages}
-              keyExtractor={(item) => item.data.eventId.toString()}
+              data={myEvents}
+              keyExtractor={(item) => item.eventId.toString()}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   className="flex-row items-center justify-between border-b border-gray-300 py-2"
@@ -367,12 +369,12 @@ const Chatroom = () => {
                     handleEventSelection(item);
                   }}
                 >
-                  <Text className="text-base font-pmedium text-black">{item.data.eventName}</Text>
+                  <Text className="text-base font-pmedium text-black">{item.eventName}</Text>
 
                 </TouchableOpacity>
               )}
             />}
-            { eventsInMessages.length <= 0 && 
+            { myEvents.length <= 0 && 
               <Text className="text-base font-pmedium text-black text-center">You don't have any event hosted in this channel.</Text>}
             <CustomButton
               title="Close"
