@@ -413,7 +413,7 @@ const NewEventForm = ({ onSubmit }) => {
     <Modal visible={showChannelModal} transparent={true} animationType="slide">
         <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
-            <FlatList
+              <FlatList
                 data={mySubscribedChannels}
                 keyExtractor={(item) => item.channelId.toString()}
                 renderItem={({ item }) => {

@@ -131,29 +131,29 @@ const Message = () => {
             <ScrollView>
                 {
                     (
-                                  myChannels?.map((channel, index) => (
-                                    <TouchableOpacity key={index} className="border-b border-black" onPress={() => { router.push(`/chatroom?channelId=${channel.channelId}`) }}>
-                                      <View className="flex-row">
-                                        <View className="my-4 space-y-2 flex-[0.4] border-r border-black items-center justify-center">
-                                            <Image 
-                                              source={categories.find(cat => cat.title === channel.category).icon} 
-                                              className="w-12 h-12" 
-                                              tintColor={'#7257ca'}
-                                              />
-                                            <Text className="text-center text-gray-600">{channel.category}</Text>
-                                        </View>
-                                        <View className="ml-4 my-4 space-y-1 flex-1 items-center justify-center">
-                                          <Text className="font-psemibold text-lg text-center" numberOfLines={1} ellipsizeMode="tail">
-                                                  {channel.channelName}
-                                          </Text>
-                                          <Text className="font-pregular text-sm " numberOfLines={6} ellipsizeMode="tail">
-                                                  {formatChannelDesc(channel.channelDesc)}
-                                          </Text>
-                                        </View>
-                                      </View>
-                                    </TouchableOpacity>
-                                  ))
-                                )
+                        myChannels?.map((channel, index) => (
+                        <TouchableOpacity key={index} className="border-b border-black" onPress={() => { router.push(`/chatroom?channelId=${channel.channelId}`) }}>
+                            <View className="flex-row">
+                            <View className="my-4 space-y-2 flex-[0.4] border-r border-black items-center justify-center">
+                                <Image 
+                                    source={categories.find(cat => cat.title === channel.category).icon} 
+                                    className="w-12 h-12" 
+                                    tintColor={'#7257ca'}
+                                    />
+                                <Text className="text-center text-gray-600">{channel.category}</Text>
+                            </View>
+                            <View className="ml-4 my-4 space-y-1 flex-1 items-center justify-center">
+                                <Text className="font-psemibold text-lg text-center" numberOfLines={1} ellipsizeMode="tail">
+                                        {channel.channelName}
+                                </Text>
+                                <Text className="font-pregular text-sm " numberOfLines={6} ellipsizeMode="tail">
+                                        {formatChannelDesc(channel.channelDesc)}
+                                </Text>
+                            </View>
+                            </View>
+                        </TouchableOpacity>
+                        ))
+                    )
                 }
                 
             </ScrollView>
