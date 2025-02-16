@@ -50,12 +50,32 @@ export const getActiveEventsByChannelId = async(channelId) => {
     }
 }
 
+export const getAllByOrganizerId = async(accountId) => {
+    try {
+        const response = await apiClient.get(`/event/getByAccountId/${accountId}`, { timeout: 10000 });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching events:', error);
+        throw error;
+    }
+}
+
 export const getActiveByEventId = async(eventId) => {
     try {
         const response = await apiClient.get(`/event/getActiveByEventId/${eventId}`, { timeout: 10000 });
         return response.data;
     } catch (error) {
         console.error('Error fetching event:', error);
+        throw error;
+    }
+}
+
+export const getRecommendedEvents = async(data) => {
+    try {
+        const response = await apiClient.post('/event/getEventRecommendations', data, { timeout: 10000 });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching events:', error);
         throw error;
     }
 }

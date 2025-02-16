@@ -70,6 +70,7 @@ import lookDown from "../assets/icons/look-down.png";
 import blink from "../assets/icons/blink.png";
 import ok from "../assets/icons/ok.png";
 import send from "../assets/icons/send.png";
+import filter from "../assets/icons/filter.png";
 
 export default {
   play,
@@ -144,4 +145,5 @@ export default {
   blink,
   ok,
   send,
+  filter,
 };

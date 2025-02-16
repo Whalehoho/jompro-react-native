@@ -101,6 +101,7 @@ const MySubscriptions = () => {
     const fetchMyChannels = async () => {
       try {
         const response = await api.channel.getChannelsByOwnerId(userId);
+        if(!response || !response.data) { return; }
         setMyChannels(response.data);
       } catch (error) {
         console.error('Failed to fetch channels:', error);

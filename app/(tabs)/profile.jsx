@@ -180,7 +180,7 @@ const Profile = () => {
           {listItems.map((item, index) => (
             <TouchableOpacity 
               key={index} 
-              className={`flex-row items-center py-4  ${index !== listItems.length - 1 ? 'border-b-2 border-gray-800' : ''}`}
+              className={`flex-row items-center py-2  ${index !== listItems.length - 1 ? 'border-b-2 border-gray-800' : ''}`}
               onPress={() => {
                 router.push(item.link);
               }}
@@ -191,7 +191,7 @@ const Profile = () => {
                 tintColor= '#7257ca'
                 className="w-8 h-8 ml-2 mr-4"
               />
-              <Text className="text-xl text-gray-800 ml-auto">{item.title}</Text>
+              <Text className="text-base text-gray-800 font-psemibold ml-auto">{item.title}</Text>
               <Image source={icons.next} className="w-6 h-6 ml-auto mr-4" tintColor= '#7257ca'/>
             </TouchableOpacity>
           ))}

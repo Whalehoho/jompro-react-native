@@ -24,6 +24,7 @@ const Chatroom = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventsInMessages, setEventsInMessages] = useState([]);
 
+
   useEffect(() => {
     const fetchEventsInMessages = async () => {
       try {
@@ -76,6 +77,10 @@ const Chatroom = () => {
     fetchUserId();
   }, [channelId]));
 
+  // useEffect(() => {
+  //   console.log(senderProfileImageCache);  // Logs the updated cache after state changes
+  // }, [senderProfileImageCache]);
+
 
   useFocusEffect(useCallback(() => {
     // Connect to chatroom
@@ -85,16 +90,24 @@ const Chatroom = () => {
     socket.on('chatHistory', async (history) => {
       // console.log('Chat history:', history);
 
-      // Loop through the history and fetch the profile image for each sender if not already cached
+      const fetchedSenderIds = new Set();  // Track senderIds we've already processed
+
       for (let message of history) {
         const { senderId } = message;
 
-        // Fetch the profile image URL for sender if not cached
-        if (!senderProfileImageCache[senderId]) {
+        // Skip fetching if senderId has already been processed
+        if (!fetchedSenderIds.has(senderId)) {
           const url = await api.user.getProfileUrlbyId(senderId);
-          setSenderProfileImageCache((prev) => ({ ...prev, [senderId]: url.data }));
+          
+          // Update the cache with the new URL and mark senderId as processed
+          setSenderProfileImageCache((prev) => ({
+            ...prev,
+            [senderId]: url.data,
+          }));
+          fetchedSenderIds.add(senderId);  // Mark senderId as processed
         }
       }
+
 
       setMessages(history);
     });

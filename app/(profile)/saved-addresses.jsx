@@ -12,6 +12,7 @@ import { icons } from '../../constants';
 import { add } from '@shopify/react-native-skia';
 
 import * as api from '../../api'
+import { stat } from 'react-native-fs';
 
 const SavedAddresses = () => {
 
@@ -69,13 +70,18 @@ const SavedAddresses = () => {
     const locality = addressComponents.find(component =>
       component.types.includes('locality')
     )?.long_name;
+    const state = addressComponents.find(component =>
+      component.types.includes('administrative_area_level_1')
+    )?.long_name;
     console.log('full address:', selectedAddress);
     console.log('city:', locality);
+    console.log('state:', state);
     // console.log('region:', sublocality_level_1);
     // console.log('lat:', lat);
     // console.log('lng:', lng);
     setNewAddress({
       fullAddress: selectedAddress,
+      state: state === 'Johor Darul Ta\'zim' ? 'Johor' : state,
       city: locality,
       region: sublocality_level_1,
       lat: lat,
@@ -94,6 +100,7 @@ const SavedAddresses = () => {
     if (newAddress) {
       const newEntry = {
         fullAddress: newAddress.fullAddress,
+        state: newAddress.state === 'Johor Darul Ta\'zim' ? 'Johor' : newAddress.state,
         city: newAddress.city,
         region: newAddress.region,
         lat: newAddress.lat,
@@ -145,6 +152,7 @@ const SavedAddresses = () => {
               onPress={async () => {
                 const updatedAddress = {
                   fullAddress: item.fullAddress,
+                  state: item.state === 'Johor Darul Ta\'zim' ? 'Johor' : item.state,
                   city: item.city,
                   region: item.region,
                   lat: item.lat,
@@ -213,6 +221,7 @@ const SavedAddresses = () => {
 
                     await api.user.removeAddress(user.accountId, {
                       fullAddress: item.fullAddress,
+                      state: item.state === 'Johor Darul Ta\'zim' ? 'Johor' : item.state,
                       city: item.city,
                       region: item.region,
                       lat: item.lat,

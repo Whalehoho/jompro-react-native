@@ -165,10 +165,14 @@ const NewEventForm = ({ onSubmit }) => {
     const locality = addressComponents.find(component =>
       component.types.includes('locality')
     )?.long_name;
+    const state = addressComponents.find(component =>
+      component.types.includes('administrative_area_level_1')
+    )?.long_name;
     console.log('full address:', selectedAddress);
     console.log('city:', locality);
     setSelectedAddress({
         fullAddress: selectedAddress,
+        state: state === 'Johor Darul Ta\'zim' ? 'Johor' : state,
         city: locality,
         region: sublocality_level_1,
         lat: lat,

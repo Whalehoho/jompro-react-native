@@ -116,11 +116,12 @@ const MyRSVPs = () => {
     const fetchRsvpsAndEvents = async () => {
         try {
             const response = await api.rsvp.getApprovedByAccountId(userId);
+            if(!response || !response.data) { return; }
             setRsvps(response.data);
             const eventIds = response.data.map(rsvp => rsvp.eventId);
             for (const eventId of eventIds) {
                 const event = await api.event.getActiveByEventId(eventId);
-                if(event) {
+                if(event && event.data) {
                     const data = {
                         title: event.data.eventName,
                         organizerId: event.data.organizerId,
@@ -149,6 +150,7 @@ const MyRSVPs = () => {
     const fetchMyActiveEvents = async () => {
       try {
         const response = await api.event.getActiveEventsByOrganizerId(userId);
+        if (!response || !response.data) { return; }
         for (const event of response.data) {
           const data = {
             title: event.eventName,
@@ -221,6 +223,7 @@ const MyRSVPs = () => {
   };
 
   const onSwipe = (event) => {
+    return;
     const { translationX } = event.nativeEvent;
     if (translationX > 50) {
       changeDate('prev'); // Swipe right → Previous date
