@@ -284,7 +284,7 @@ const EventInfo = () => {
                 return;
             }
             const parsedUser = JSON.parse(storedUser);
-            if(!myRSVP && !mySubscription && channel && channel.privacy === 'private'){
+            if(!myRSVP && !mySubscription && channel && channel.channelPrivacy === 'private'){
                 Alert.alert("RSVP Request", "This is a private channel's event. You need to subscribe to the channel first before RSVP to this event.");
             }else if(!myRSVP && event.maxParticipants && attendeesProfile.length >= event.maxParticipants){
                 Alert.alert(
@@ -314,7 +314,7 @@ const EventInfo = () => {
                                 const rsvpData = {
                                     userId: parsedUser.userId,
                                     eventId: eventId,
-                                    status: 'pending',
+                                    rsvpStatus: 'pending',
                                 };
                                 const response = await api.rsvp.createRsvp(rsvpData);
                                 setMyRSVP(response.data);
@@ -338,7 +338,7 @@ const EventInfo = () => {
                                 const rsvpData = {
                                     userId: parsedUser.userId,
                                     eventId: eventId,
-                                    status: 'approved',
+                                    rsvpStatus: 'approved',
                                 };
                                 const response = await api.rsvp.createRsvp(rsvpData);
                                 setMyRSVP(response.data);
@@ -346,7 +346,7 @@ const EventInfo = () => {
                         }
                     ]
                 )
-            }else if(myRSVP && myRSVP.status === 'approved'){
+            }else if(myRSVP && myRSVP.rsvpStatus === 'approved'){
                 Alert.alert(
                     'Cancel RSVP',
                     'Are you sure you want to cancel your RSVP to this event?',
@@ -429,7 +429,7 @@ const EventInfo = () => {
                         }}>
                             <View className="mb-2 space-y-1">
                                 {channel && <Text className="font-pbold text-sm text-gray-700">{channel.channelName}</Text>}
-                                {channel && <Text className="text-gray-600 text-xs font-pmedium">{channel.privacy === 'private' ? 'Private Channel' : 'Public Channel'} </Text>}
+                                {channel && <Text className="text-gray-600 text-xs font-pmedium">{channel.channelPrivacy === 'private' ? 'Private Channel' : 'Public Channel'} </Text>}
                             </View>
                         </TouchableOpacity>
                         <View className="mb-2 space-y-2">
@@ -613,7 +613,7 @@ const EventInfo = () => {
                             </View>
                             <View style={{ flex: 1, alignItems: 'flex-end' }}>
                                 <View className="flex-row items-center justify-center pb-4 pt-4">
-                                    { myRSVP && myRSVP.status === 'approved' && 
+                                    { myRSVP && myRSVP.rsvpStatus === 'approved' && 
                                         <CustomButton
                                             title="Cancel RSVP"
                                             handlePress={handleSubmit}
@@ -623,7 +623,7 @@ const EventInfo = () => {
                                         />
                                     }
                                     {
-                                        myRSVP && myRSVP.status === 'pending' &&
+                                        myRSVP && myRSVP.rsvpStatus === 'pending' &&
                                         <CustomButton
                                             title="Pending"
                                             handlePress={handleSubmit}

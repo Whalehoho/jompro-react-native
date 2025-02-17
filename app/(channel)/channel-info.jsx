@@ -274,7 +274,7 @@ const ChannelInfo = () => {
                 return;
             }
             const parsedUser = JSON.parse(storedUser);
-            if(!mySubscription && channel && channel.privacy === 'private') {
+            if(!mySubscription && channel && channel.channelPrivacy === 'private') {
                 Alert.alert('Private Channel', 'This is a private channel. Do you want to subscribe?', [
                     {
                         text: 'Never mind',
@@ -287,7 +287,7 @@ const ChannelInfo = () => {
                             const subscription = {
                                 subscriberId: parsedUser.userId,
                                 channelId: channel.channelId,
-                                status: 'pending'
+                                subscriptionStatus: 'pending'
                             };
                             const response = await api.subscription.subscribe(subscription);
                             setMySubscription(response.data);
@@ -295,7 +295,7 @@ const ChannelInfo = () => {
                         }
                     }
                 ]);
-            } else if(!mySubscription && channel && channel.privacy === 'public') {
+            } else if(!mySubscription && channel && channel.channelPrivacy === 'public') {
                 Alert.alert('Subscribe to Channel', 'Do you want to subscribe?', [
                     {
                         text: 'Never mind',
@@ -308,7 +308,7 @@ const ChannelInfo = () => {
                             const subscription = {
                                 subscriberId: parsedUser.userId,
                                 channelId: channel.channelId,
-                                status: 'subscribed'
+                                subscriptionStatus: 'subscribed'
                             };
                             const response = await api.subscription.subscribe(subscription);
                             setMySubscription(response.data);
@@ -316,7 +316,7 @@ const ChannelInfo = () => {
                         }
                     }
                 ]);
-            }else if(mySubscription && mySubscription.status === 'subscribed') {
+            }else if(mySubscription && mySubscription.subscriptionStatus === 'subscribed') {
                 Alert.alert('Unsubscribe', 'Do you want to unsubscribe?', [
                     {
                         text: 'Never mind',
@@ -362,7 +362,7 @@ const ChannelInfo = () => {
                                     <Image source={icon} className="w-4 h-4" tintColor={'#7257ca'}/>
                                 }    
                             </View>
-                            <Text className="text-secondary-100 text-sm font-pmedium">{channel?.privacy === 'private' ? 'Private channel' : 'Public channel'}</Text>
+                            <Text className="text-secondary-100 text-sm font-pmedium">{channel?.channelPrivacy === 'private' ? 'Private channel' : 'Public channel'}</Text>
                         </View>
                     </View>
 
@@ -514,7 +514,7 @@ const ChannelInfo = () => {
                                     isLoading={isSubmitting}
                                 />
                             }
-                            { mySubscription && mySubscription.status === 'pending' &&
+                            { mySubscription && mySubscription.subscriptionStatus === 'pending' &&
                                 <CustomButton
                                     title="Pending"
                                     handlePress={handleSubmit}
@@ -524,7 +524,7 @@ const ChannelInfo = () => {
                                     disabled={true}
                                 />
                             }
-                            { mySubscription && mySubscription.status === 'subscribed' &&
+                            { mySubscription && mySubscription.subscriptionStatus === 'subscribed' &&
                                 <CustomButton
                                     title="Unsubscribe"
                                     handlePress={handleSubmit}

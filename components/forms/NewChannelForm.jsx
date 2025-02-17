@@ -73,7 +73,7 @@ const NewChannelForm = ({ onSubmit }) => {
         channelName: form.channelName,
         channelDesc: form.channelDescription,
         category: form.category,
-        privacy: form.private === true ? 'private' : 'public',
+        channelPrivacy: form.private === true ? 'private' : 'public',
         ownerId: user.userId,
       });
       Alert.alert('Success', 'Channel created successfully');
