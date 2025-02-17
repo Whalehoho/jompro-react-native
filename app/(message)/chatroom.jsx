@@ -18,7 +18,7 @@ const Chatroom = () => {
   const [userId, setUserId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [senderProfileImageCache, setSenderProfileImageCache] = useState({}); // profile_img_url cache
+  const [senderProfileImageCache, setSenderProfileImageCache] = useState({}); // user_profile_img_url cache
   const [showModal, setShowModal] = useState(false);
   const [myEvents, setMyEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -69,7 +69,7 @@ const Chatroom = () => {
           return;
         }
         const parsedUser = JSON.parse(storedUser);
-        setUserId(parsedUser.accountId);
+        setUserId(parsedUser.userId);
       } catch (error) {
         console.error('Error fetching user:', error);
       }
@@ -185,7 +185,7 @@ const Chatroom = () => {
 
                     {Number(item.senderId) !== Number(userId) && (
                       <Image
-                        source={{ uri: senderProfileImageCache[item.senderId].profile_img_url }}
+                        source={{ uri: senderProfileImageCache[item.senderId].user_profile_img_url }}
                         style={styles.profileImage}
                       />
                     )}
@@ -233,7 +233,7 @@ const Chatroom = () => {
 
                     {Number(item.senderId) === Number(userId) && (
                       <Image
-                        source={{ uri: senderProfileImageCache[item.senderId].profile_img_url }}
+                        source={{ uri: senderProfileImageCache[item.senderId].user_profile_img_url }}
                         style={styles.profileImage}
                       />
                     )}
@@ -251,7 +251,7 @@ const Chatroom = () => {
 
                     {Number(item.senderId) !== Number(userId) && (
                       <Image
-                        source={{ uri: senderProfileImageCache[item.senderId].profile_img_url }}
+                        source={{ uri: senderProfileImageCache[item.senderId].user_profile_img_url }}
                         style={styles.profileImage}
                       />
                     )}
@@ -332,7 +332,7 @@ const Chatroom = () => {
 
                     {Number(item.senderId) === Number(userId) && (
                       <Image
-                        source={{ uri: senderProfileImageCache[item.senderId].profile_img_url }}
+                        source={{ uri: senderProfileImageCache[item.senderId].user_profile_img_url }}
                         style={styles.profileImage}
                       />
                     )}

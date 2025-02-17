@@ -54,7 +54,7 @@ const Home = () => {
     setShowModal(false);
     // console.log('selected states:', selectedStates);
     const data = {
-      user_id: user.accountId,
+      user_id: user.userId,
       top_n: 3,
       states: selectedStates,
     };
@@ -65,7 +65,7 @@ const Home = () => {
     if (selectedStates.length <= 0) return;
     const fetchRecommendedEvents = async () => {
       const data = {
-        user_id: user.accountId,
+        user_id: user.userId,
         top_n: 3,
         states: selectedStates,
       };
@@ -120,7 +120,7 @@ const Home = () => {
     if(!user) return;
     const fetchRsvpData = async () => {
       try {
-        const response = await api.rsvp.getApprovedByAccountId(user.accountId);
+        const response = await api.rsvp.getApprovedByAccountId(user.userId);
         if(!response) return;
         setRsvp(response.data);
       } catch (error) {
@@ -129,7 +129,7 @@ const Home = () => {
     };
     const fetchOwnEventData = async () => {
       try {
-        const response = await api.event.getAllByOrganizerId(user.accountId);
+        const response = await api.event.getAllByOrganizerId(user.userId);
         if(!response) return;
         setEvent(response.data);
       } catch (error) {
@@ -138,7 +138,7 @@ const Home = () => {
     };
     const fetchOwnChannelData = async () => {
       try {
-        const response = await api.channel.getChannelsByOwnerId(user.accountId);
+        const response = await api.channel.getChannelsByOwnerId(user.userId);
         if(!response) return;
         setChannel(response.data);
       } catch (error) {
@@ -147,7 +147,7 @@ const Home = () => {
     };
     const fetchSubscriptionData = async () => {
       try {
-        const response = await api.subscription.getMySubscribed(user.accountId);
+        const response = await api.subscription.getMySubscribed(user.userId);
         if(!response) return;
         setSubscription(response.data);
       } catch (error) {

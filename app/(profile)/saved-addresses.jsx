@@ -118,7 +118,7 @@ const SavedAddresses = () => {
       setUserAddresses(updatedAddresses);
       
       
-      const response = await api.user.addAddress(user.accountId, newAddress);
+      const response = await api.user.addAddress(user.userId, newAddress);
       if(response.data === 'success') {
         await AsyncStorage.setItem('userAddresses', JSON.stringify(updatedAddresses));
       } else if(response.data === 'duplicate') {
@@ -160,7 +160,7 @@ const SavedAddresses = () => {
                 };
             
                 await api.user.updateDefaultAddress({
-                  accountId: user.accountId,
+                  userId: user.userId,
                   defaultAddress: updatedAddress,
                 });
             
@@ -219,7 +219,7 @@ const SavedAddresses = () => {
                     setUserAddresses(updatedAddresses);
                     await AsyncStorage.setItem('userAddresses', JSON.stringify(updatedAddresses));
 
-                    await api.user.removeAddress(user.accountId, {
+                    await api.user.removeAddress(user.userId, {
                       fullAddress: item.fullAddress,
                       state: item.state === 'Johor Darul Ta\'zim' ? 'Johor' : item.state,
                       city: item.city,

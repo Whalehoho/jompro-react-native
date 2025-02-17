@@ -12,21 +12,21 @@ import * as api from '../../api'
 const SignUp = () => {
   const [form, setForm] = useState({
     username: '',
-    email: '',
+    userEmail: '',
     password: ''
   })
 
   const [isSubmitting, setisSubmitting] = useState(false)
 
   const submit = async () => {
-    if(!form.username || !form.email || !form.password) {
+    if(!form.username || !form.userEmail || !form.password) {
       return Alert.alert('Please fill in all fields')
     }
     setisSubmitting(true);
     try{
       const user = {
         userName: form.username,
-        email: form.email,
+        userEmail: form.userEmail,
         password: form.password
       }
       const message = await api.auth.register(user)
@@ -53,8 +53,8 @@ const SignUp = () => {
           />
           <FormField 
             title="Email"
-            value={form.email}
-            handleChangeText={(e) => setForm({ ...form, email: e })}
+            value={form.userEmail}
+            handleChangeText={(e) => setForm({ ...form, userEmail: e })}
             otherStyles="mt-7"
             keyboardType="email-address"
           />

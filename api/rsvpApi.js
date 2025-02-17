@@ -20,9 +20,9 @@ export const getApprovedByEventId = async (eventId) => {
     }
 }
 
-export const getApprovedByAccountId = async (accountId) => {
+export const getApprovedByAccountId = async (userId) => {
     try {
-        const response = await apiClient.get(`/rsvp/getApprovedByAccountId/${accountId}`, { timeout: 10000 });
+        const response = await apiClient.get(`/rsvp/getApprovedByAccountId/${userId}`, { timeout: 10000 });
         return response.data;
     } catch (error) {
         console.error('Error fetching RSVPs:', error);
@@ -40,9 +40,9 @@ export const getPendingByEventId = async (eventId) => {
     }
 }
 
-export const getByEventIdAndAccountId = async (eventId, accountId) => {
+export const getByEventIdAndAccountId = async (eventId, userId) => {
     try {
-        const response = await apiClient.get(`/rsvp/getByEventIdAndAccountId/${eventId}/${accountId}`, { timeout: 10000 });
+        const response = await apiClient.get(`/rsvp/getByEventIdAndAccountId/${eventId}/${userId}`, { timeout: 10000 });
         return response.data;
     } catch (error) {
         console.error('Error fetching RSVP:', error);

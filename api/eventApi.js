@@ -50,9 +50,9 @@ export const getActiveEventsByChannelId = async(channelId) => {
     }
 }
 
-export const getAllByOrganizerId = async(accountId) => {
+export const getAllByOrganizerId = async(userId) => {
     try {
-        const response = await apiClient.get(`/event/getByAccountId/${accountId}`, { timeout: 10000 });
+        const response = await apiClient.get(`/event/getByAccountId/${userId}`, { timeout: 10000 });
         return response.data;
     } catch (error) {
         console.error('Error fetching events:', error);

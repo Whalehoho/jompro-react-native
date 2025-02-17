@@ -17,7 +17,7 @@ const AttendeesProfileImages = ({ profiles }) => {
           {profiles.slice(0, 3).map((profile, index) => (
             <Image
               key={index}
-              source={{ uri: profile.profileImgUrl? profile.profileImgUrl : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }}
+              source={{ uri: profile.userProfileImgUrl? profile.userProfileImgUrl : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }}
               style={{
                 width: 56,
                 height: 56,
@@ -110,7 +110,7 @@ const EventInfo = () => {
                     return;
                 }
                 const parsedUser = JSON.parse(storedUser);
-                setUserId(parsedUser.accountId);
+                setUserId(parsedUser.userId);
             } catch (error) {
                 console.error('Error fetching user:', error);
             }
@@ -154,7 +154,7 @@ const EventInfo = () => {
                 const storedUser = await AsyncStorage.getItem('user');
                 if (storedUser) {
                     const parsedUser = JSON.parse(storedUser);
-                    const response = await api.rsvp.getByEventIdAndAccountId(eventId, parsedUser.accountId);
+                    const response = await api.rsvp.getByEventIdAndAccountId(eventId, parsedUser.userId);
                     if(!response){ 
                         setMyRSVP(null);
                     } else {
@@ -211,7 +211,7 @@ const EventInfo = () => {
         const fetchEventOrganizerProfile = async () => {
             try {
                 const response = await api.user.getProfileUrlbyId(event?.organizerId);
-                setOrganizerProfile(response.data.profile_img_url);
+                setOrganizerProfile(response.data.user_profile_img_url);
             } catch (error) {
                 console.error('Failed to fetch event:', error);
             }
@@ -227,7 +227,7 @@ const EventInfo = () => {
                 const attendees = response.data;
                 const attendeesProfile = [];
                 for (const attendee of attendees) {
-                    const response = await api.user.getProfilebyId(attendee.accountId);
+                    const response = await api.user.getProfilebyId(attendee.userId);
                     attendeesProfile.push(response.data);
                 }
                 setAttendeesProfile(attendeesProfile);
@@ -245,7 +245,7 @@ const EventInfo = () => {
             try {
                 const pendingProfiles = [];
                 for (const pending of pendingRSVP) {
-                    const response = await api.user.getProfilebyId(pending.accountId);
+                    const response = await api.user.getProfilebyId(pending.userId);
                     pendingProfiles.push(response.data);
                 }
                 setPendingProfiles(pendingProfiles);
@@ -264,7 +264,7 @@ const EventInfo = () => {
                 const storedUser = await AsyncStorage.getItem('user');
                 if (storedUser) {
                     const parsedUser = JSON.parse(storedUser);
-                    const response = await api.subscription.getSubscribedByChannelIdAndAccountId(parsedUser.accountId, event.channelId);
+                    const response = await api.subscription.getSubscribedByChannelIdAndAccountId(parsedUser.userId, event.channelId);
                     setMySubscription(response.data);
                 }
             } catch (error) {
@@ -312,7 +312,7 @@ const EventInfo = () => {
                             text: 'OK',
                             onPress: async () => {
                                 const rsvpData = {
-                                    accountId: parsedUser.accountId,
+                                    userId: parsedUser.userId,
                                     eventId: eventId,
                                     status: 'pending',
                                 };
@@ -336,7 +336,7 @@ const EventInfo = () => {
                             text: 'OK',
                             onPress: async () => {
                                 const rsvpData = {
-                                    accountId: parsedUser.accountId,
+                                    userId: parsedUser.userId,
                                     eventId: eventId,
                                     status: 'approved',
                                 };
@@ -460,7 +460,7 @@ const EventInfo = () => {
                             <Text className="font-pbold text-xl text-gray-700">Hosted By</Text>
                             <View className="flex-row">
                                 <TouchableOpacity onPress={() => {
-                                    bottomSheetRef.current?.setUserProfile({ accountId: event.organizerId });
+                                    bottomSheetRef.current?.setUserProfile({ userId: event.organizerId });
                                     bottomSheetRef.current?.setType('organizer');
                                     bottomSheetRef.current?.setToDo('view');
                                     bottomSheetRef.current?.setData(eventId);
@@ -500,7 +500,7 @@ const EventInfo = () => {
                                              }}>
                                                 <Image
                                                 key={index}
-                                                source={{ uri: profile.profileImgUrl? profile.profileImgUrl : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }}
+                                                source={{ uri: profile.userProfileImgUrl? profile.userProfileImgUrl : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }}
                                                 style={{
                                                     width: 60,
                                                     height: 60,
@@ -530,7 +530,7 @@ const EventInfo = () => {
                                                 }}>
                                                     <Image
                                                     key={index}
-                                                    source={{ uri: profile.profileImgUrl? profile.profileImgUrl : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }}
+                                                    source={{ uri: profile.userProfileImgUrl? profile.userProfileImgUrl : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }}
                                                     style={{
                                                         width: 60,
                                                         height: 60,

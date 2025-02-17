@@ -81,9 +81,9 @@ const Profile = () => {
         }     
   
         const userData = {
-          email: user.email,
-          profileImgUrl: data.data.url,
-          profileImgDeleteUrl: data.data.delete_url
+          userEmail: user.userEmail,
+          userProfileImgUrl: data.data.url,
+          userProfileImgDeleteUrl: data.data.delete_url
         }
   
   
@@ -148,13 +148,13 @@ const Profile = () => {
                 source={
                   profileImage
                     ? { uri: profileImage }
-                    : user?.profileImgUrl
-                    ? { uri: user.profileImgUrl }
+                    : user?.userProfileImgUrl
+                    ? { uri: user.userProfileImgUrl }
                     : require('../../assets/icons/account.png')
                 }
                 className="w-40 h-40"
                 style={{
-                  tintColor: (!profileImage && !user?.profileImgUrl) ? '#5e40b7' : undefined,
+                  tintColor: (!profileImage && !user?.userProfileImgUrl) ? '#5e40b7' : undefined,
                 }}
               />
             </View>
@@ -171,7 +171,7 @@ const Profile = () => {
         <View className="items-center mb-2">
           <Text className="text-2xl text-gray-800 mt-0 mb-4 font-pblack">{user?.userName}</Text>
           <View className="flex-row items-center bg-primary">
-            <Text className="text-xl text-gray-800  underline font-pbold text-center border-y-2 border-r-2 border-l-2 border-gray-800 p-1" style={{ flex: 1 }}>@{user?.accountId}</Text>
+            <Text className="text-xl text-gray-800  underline font-pbold text-center border-y-2 border-r-2 border-l-2 border-gray-800 p-1" style={{ flex: 1 }}>@{user?.userId}</Text>
             <Text className="text-xl text-gray-800  font-pbold text-center border-y-2 border-r-2 p-1" style={{ flex: 1 }}>Verified ✔</Text>
           </View>
         </View>

@@ -1,9 +1,9 @@
 import apiClient from "./apiClient";
 
 
-export const getMySubscribed = async (accountId) => {
+export const getMySubscribed = async (userId) => {
     try {
-        const response = await apiClient.get(`/subscription/getMySubscribed/${accountId}`, { timeout: 10000 });
+        const response = await apiClient.get(`/subscription/getMySubscribed/${userId}`, { timeout: 10000 });
         return response.data;
     } catch (error) {
         console.error('Error fetching subscriptions:', error);

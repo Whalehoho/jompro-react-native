@@ -85,7 +85,7 @@ const ChannelInfo = () => {
                     return;
                 }
                 const parsedUser = JSON.parse(storedUser);
-                setUserId(parsedUser.accountId);
+                setUserId(parsedUser.userId);
             } catch (error) {
                 console.error('Error fetching user:', error);
             }
@@ -134,7 +134,7 @@ const ChannelInfo = () => {
         const fetchOwnerProfile = async () => {
             try {
                 const response = await api.user.getProfileUrlbyId(channel.ownerId);
-                setOwnerProfile(response.data.profile_img_url);
+                setOwnerProfile(response.data.user_profile_img_url);
             } catch (error) {
                 console.error('Error fetching owner profile:', error);
             }
@@ -171,7 +171,7 @@ const ChannelInfo = () => {
                     return;
                 }
                 const parsedUser = JSON.parse(storedUser);
-                const response = await api.subscription.getSubscribedByChannelIdAndAccountId(parsedUser.accountId, channel.channelId);
+                const response = await api.subscription.getSubscribedByChannelIdAndAccountId(parsedUser.userId, channel.channelId);
                 setMySubscription(response.data);
             } catch (error) {
                 console.error('Error fetching my subscription:', error);
@@ -228,7 +228,7 @@ const ChannelInfo = () => {
                  }}>
                     <Image
                     key={index}
-                    source={{ uri: profile.profileImgUrl? profile.profileImgUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s'}}
+                    source={{ uri: profile.userProfileImgUrl? profile.userProfileImgUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s'}}
                     style={{
                         width: 60,
                         height: 60,
@@ -285,7 +285,7 @@ const ChannelInfo = () => {
                         text: 'Ok',
                         onPress: async () => {
                             const subscription = {
-                                subscriberId: parsedUser.accountId,
+                                subscriberId: parsedUser.userId,
                                 channelId: channel.channelId,
                                 status: 'pending'
                             };
@@ -306,7 +306,7 @@ const ChannelInfo = () => {
                         text: 'Ok',
                         onPress: async () => {
                             const subscription = {
-                                subscriberId: parsedUser.accountId,
+                                subscriberId: parsedUser.userId,
                                 channelId: channel.channelId,
                                 status: 'subscribed'
                             };
@@ -371,7 +371,7 @@ const ChannelInfo = () => {
                     <View className="mx-4 space-y-2 mb-4" style={{ flex: 0.5, alignItems: 'flex-start' }}>
                         <Text className="font-pbold text-xl text-gray-700">Owner</Text>
                         <TouchableOpacity onPress={() => {
-                            bottomSheetRef.current?.setUserProfile({accountId: channel.ownerId});
+                            bottomSheetRef.current?.setUserProfile({userId: channel.ownerId});
                             bottomSheetRef.current?.setType("owner");
                             bottomSheetRef.current?.setToDo("view");
                             bottomSheetRef.current?.setData(channel.channelId);

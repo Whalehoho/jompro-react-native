@@ -41,10 +41,10 @@ export const updateProfile = async (userData) => {
   }
 }
 
-export const addAddress = async (accountId, addressData) => {
+export const addAddress = async (userId, addressData) => {
   try {
     console.log('addressData', addressData);
-    const response = await apiClient.put(`/region/addAddress/${accountId}`, addressData);
+    const response = await apiClient.put(`/region/addAddress/${userId}`, addressData);
     return response.data;
   } catch (error) {
     console.error('Error adding address:', error);
@@ -52,9 +52,9 @@ export const addAddress = async (accountId, addressData) => {
   }
 }
 
-export const fetchAddresses = async (accountId) => {
+export const fetchAddresses = async (userId) => {
   try {
-    const response = await apiClient.get(`/region/accountId/${accountId}`);
+    const response = await apiClient.get(`/region/userId/${userId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching addresses:', error);
@@ -72,9 +72,9 @@ export const updateDefaultAddress = async (defaultAddress) => {
   }
 }
 
-export const removeAddress = async (accountId, addressData) => {
+export const removeAddress = async (userId, addressData) => {
   try {
-    const response = await apiClient.put(`/region/removeAddress/${accountId}`, addressData);
+    const response = await apiClient.put(`/region/removeAddress/${userId}`, addressData);
     return response.data;
   } catch (error) {
     console.error('Error removing address:', error);
@@ -82,9 +82,9 @@ export const removeAddress = async (accountId, addressData) => {
   }
 }
 
-export const getProfileUrlbyId = async (accountId) => {
+export const getProfileUrlbyId = async (userId) => {
   try {
-    const response = await apiClient.get(`/user/getProfileUrlbyAccountId/${accountId}`);
+    const response = await apiClient.get(`/user/getProfileUrlbyAccountId/${userId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching profile url:', error);
@@ -92,9 +92,9 @@ export const getProfileUrlbyId = async (accountId) => {
   }
 }
 
-export const getProfilebyId = async (accountId) => {
+export const getProfilebyId = async (userId) => {
   try {
-    const response = await apiClient.get(`/user/accountId/${accountId}`);
+    const response = await apiClient.get(`/user/userId/${userId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching profile:', error);

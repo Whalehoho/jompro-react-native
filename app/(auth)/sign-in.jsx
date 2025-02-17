@@ -14,7 +14,7 @@ import { useGlobalContext } from '../../context/GlobalProvider'
 
 const SignIn = () => {
   const [form, setForm] = useState({
-    email: '',
+    userEmail: '',
     password: ''
   })
 
@@ -23,13 +23,13 @@ const SignIn = () => {
   const { loginUser } = useGlobalContext();
 
   const submit = async () => {
-    if(!form.email || !form.password) {
+    if(!form.userEmail || !form.password) {
       return Alert.alert('Please fill in all fields')
     }
     setisSubmitting(true);
     try{
       const user = {
-        email: form.email,
+        userEmail: form.userEmail,
         password: form.password
       }
       const message = await api.auth.login(user)
@@ -44,7 +44,7 @@ const SignIn = () => {
         loginUser(message.user)
         console.log(message.user)
         // Fetch user addresses and set in global state
-        const addresses = await api.user.fetchAddresses(message.user.accountId)
+        const addresses = await api.user.fetchAddresses(message.user.userId)
         await AsyncStorage.setItem('userAddresses', JSON.stringify(addresses))
         // console.log('userAddresses', await AsyncStorage.getItem('userAddresses'))
 
@@ -68,8 +68,8 @@ const SignIn = () => {
           <Text className="text-2xl text-secondary text-semibold mt-10 font-psemibold">Log in to Jom Pro</Text>
           <FormField 
             title="Email"
-            value={form.email}
-            handleChangeText={(e) => setForm({ ...form, email: e })}
+            value={form.userEmail}
+            handleChangeText={(e) => setForm({ ...form, userEmail: e })}
             otherStyles="mt-7"
             keyboardType="email-address"
           />

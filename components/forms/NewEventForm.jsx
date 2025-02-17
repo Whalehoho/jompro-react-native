@@ -76,7 +76,7 @@ const NewEventForm = ({ onSubmit }) => {
   useEffect(() => {
     const fetchMySubscribedChannels = async () => {
         try{
-            const subscribed = await api.subscription.getMySubscribed(user.accountId);
+            const subscribed = await api.subscription.getMySubscribed(user.userId);
             const channelIds = subscribed.data.map(sub => sub.channelId);
             // Create an array to hold the channel responses
             const channels = [];
@@ -86,7 +86,7 @@ const NewEventForm = ({ onSubmit }) => {
                 const channel = await api.channel.getChannelByChannelId(channelId);
                 channels.push(channel.data); // Push each channel response to the array
             }
-            const myCreatedChannels = await api.channel.getChannelsByOwnerId(user.accountId);
+            const myCreatedChannels = await api.channel.getChannelsByOwnerId(user.userId);
             channels.push(...myCreatedChannels.data);
             setMySubscribedChannels(channels);
         } catch (error) {
@@ -207,7 +207,7 @@ const NewEventForm = ({ onSubmit }) => {
         eventName: form.eventName,
         eventAbout: form.eventDescription,
         category: form.channel.category,
-        organizerId: user.accountId,
+        organizerId: user.userId,
         status: 'active',
         startTime: eventDate,
         duration: duration,

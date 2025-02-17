@@ -17,9 +17,9 @@ import { useGlobalContext } from '../../context/GlobalProvider'
 const MyDetails = () => {
   const [form, setForm] = useState({
     userName: '',
-    email: '',
+    userEmail: '',
     newPassword: '',
-    age: '',
+    userAge: '',
   })
 
   const [gender, setGender] = useState('');
@@ -35,13 +35,13 @@ const MyDetails = () => {
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
-          setGender(parsedUser.gender);
+          setGender(parsedUser.userGender);
           setForm({
             userName: parsedUser.userName || '',
-            email: parsedUser.email || '',
+            userEmail: parsedUser.userEmail || '',
             password: form.password || '',
-            age: parsedUser.age ? `${parsedUser.age}` : '',
-            gender: parsedUser.gender || '',
+            userAge: parsedUser.userAge ? `${parsedUser.userAge}` : '',
+            userGender: parsedUser.userGender || '',
           });
         }
       } catch (error) {
@@ -69,13 +69,13 @@ const MyDetails = () => {
     setIsSubmitting(true);
     setVisible(false);
 
-    if(!form.userName || !form.email || !form.age){
+    if(!form.userName || !form.userEmail || !form.userAge){
       Alert.alert('Username, email, age are required');
       setIsSubmitting(false);
       return;
     }
 
-    if(!Number.isInteger(Number(form.age))){
+    if(!Number.isInteger(Number(form.userAge))){
       Alert.alert('Invalid age');
       setIsSubmitting(false);
       return;
@@ -83,13 +83,13 @@ const MyDetails = () => {
 
     try{
       const message = await api.user.updateProfile({
-        accountId: user.accountId,
+        userId: user.userId,
         userName: form.userName,
-        email: form.email,
+        userEmail: form.userEmail,
         oldPassword: oldPassword,
         newPassword: form.newPassword,
-        age: form.age,
-        gender: gender,
+        userAge: form.userAge,
+        userGender: gender,
       });
       if(message.data === 'invalid password') {
         Alert.alert('invalid password');
@@ -100,9 +100,9 @@ const MyDetails = () => {
         const updatedUser = {
           ...user,
           userName: form.userName,
-          email: form.email,
-          age: form.age,
-          gender: gender
+          userEmail: form.userEmail,
+          userAge: form.userAge,
+          userGender: gender
         }
         await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
       }
@@ -131,8 +131,8 @@ const MyDetails = () => {
           />
           <FormField
             title="Email"
-            value={form.email}
-            handleChangeText={(e) => setForm({ ...form, email: e })}
+            value={form.userEmail}
+            handleChangeText={(e) => setForm({ ...form, userEmail: e })}
             titleStyle={'text-black'}
             boxStyle={'border-gray-800 bg-gray-200 rounded-sm h-14 px-4'}
             otherStyles="mt-5 space-y-1"
@@ -150,8 +150,8 @@ const MyDetails = () => {
           />
           <FormField
             title="Age"
-            value={`${form.age}`} 
-            handleChangeText={(e) => setForm({ ...form, age: e })}
+            value={`${form.userAge}`} 
+            handleChangeText={(e) => setForm({ ...form, userAge: e })}
             titleStyle={'text-black'}
             boxStyle={'border-gray-800 bg-gray-200 rounded-sm h-14 px-4'}
             otherStyles="mt-5 space-y-1"
@@ -166,7 +166,7 @@ const MyDetails = () => {
               className={`flex-1 py-4 items-center border-2 rounded-lg mx-1 ${
                 gender?
                 (gender === 'Male' ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800') :
-                (user?.gender === 'Male' ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800')
+                (user?.userGender === 'Male' ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800')
               }`}
               onPress={() => setGender('Male')}
             >
@@ -185,7 +185,7 @@ const MyDetails = () => {
               className={`flex-1 py-4 items-center border-2 rounded-lg mx-1 ${
                 gender?
                 (gender === 'Female' ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800') :
-                (user?.gender === 'Female' ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800')
+                (user?.userGender === 'Female' ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800')
               }`}
               onPress={() => setGender('Female')}
             >
@@ -204,7 +204,7 @@ const MyDetails = () => {
               className={`flex-1 py-4 items-center border-2 rounded-lg mx-1 ${
                 gender?
                 (gender === 'Unknown' ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800') :
-                (user?.gender === 'Unknown' ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800')
+                (user?.userGender === 'Unknown' ? 'bg-secondary-100 border-secondary-100' : 'border-gray-800')
               }`}
               onPress={() => setGender('Unknown')}
             >

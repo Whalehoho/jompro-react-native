@@ -53,7 +53,7 @@ const MySubscriptions = () => {
           return;
         }
         const parsedUser = JSON.parse(storedUser);
-        setUserId(parsedUser.accountId);
+        setUserId(parsedUser.userId);
       } catch (error) {
         console.error('Failed to load user from storage:', error);
       }

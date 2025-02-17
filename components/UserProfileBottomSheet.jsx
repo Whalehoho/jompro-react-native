@@ -57,7 +57,7 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
             }}
         >
             <View style={{ padding: 20 }}>
-                {<Text>{userProfile?.accountId}</Text>}
+                {<Text>{userProfile?.userId}</Text>}
             </View>
 
             {/* Bottom Sheet Content */}
@@ -77,7 +77,7 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
                                     onPress: async () => {
                                         try{
                                             setIsSubmitting(true);
-                                            const response = await api.subscription.getSubscribedByChannelIdAndAccountId(userProfile.accountId, data);
+                                            const response = await api.subscription.getSubscribedByChannelIdAndAccountId(userProfile.userId, data);
                                             const subscriptionId = response.data.subscriptionId;
                                             await api.subscription.unsubscribe(subscriptionId);
                                             setIsSubmitting(false);
@@ -117,7 +117,7 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
                                     onPress: async () => {
                                         try{
                                             setIsSubmitting(true);
-                                            const response = await api.subscription.getSubscribedByChannelIdAndAccountId(userProfile.accountId, data);
+                                            const response = await api.subscription.getSubscribedByChannelIdAndAccountId(userProfile.userId, data);
                                             const subscriptionId = response.data.subscriptionId;
                                             await api.subscription.approve(subscriptionId);
                                             setIsSubmitting(false);
@@ -151,7 +151,7 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
                                     onPress: async () => {
                                         try{
                                             setIsSubmitting(true);
-                                            const response = await api.subscription.getSubscribedByChannelIdAndAccountId(userProfile.accountId, data);
+                                            const response = await api.subscription.getSubscribedByChannelIdAndAccountId(userProfile.userId, data);
                                             const subscriptionId = response.data.subscriptionId;
                                             await api.subscription.decline(subscriptionId);
                                             setIsSubmitting(false);
@@ -190,7 +190,7 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
                                     onPress: async () => {
                                         try{
                                             setIsSubmitting(true);
-                                            const response = await api.rsvp.getByEventIdAndAccountId(data, userProfile.accountId);
+                                            const response = await api.rsvp.getByEventIdAndAccountId(data, userProfile.userId);
                                             const rsvpId = response.data.rsvpId;
                                             await api.rsvp.approveRsvp(rsvpId);
                                             setIsSubmitting(false);
@@ -224,7 +224,7 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
                                     onPress: async () => {
                                         try{
                                             setIsSubmitting(true);
-                                            const response = await api.rsvp.getByEventIdAndAccountId(data, userProfile.accountId);
+                                            const response = await api.rsvp.getByEventIdAndAccountId(data, userProfile.userId);
                                             const rsvpId = response.data.rsvpId;
                                             await api.rsvp.deleteRsvp(rsvpId);
                                             setIsSubmitting(false);

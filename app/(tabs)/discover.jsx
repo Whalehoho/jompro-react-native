@@ -70,8 +70,8 @@ const Discover = ({ navigation }) => {
     if (isFocused) {
       const fetchActiveEvents = async () => {
         try {
-          if(!user || !user.accountId) return;
-          const response = await api.event.getActiveEvents(user.accountId);
+          if(!user || !user.userId) return;
+          const response = await api.event.getActiveEvents(user.userId);
           // console.log('Active events:', response.data);
           setEvents(response.data);
         } catch (error) {

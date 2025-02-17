@@ -97,7 +97,7 @@ const MyRSVPs = () => {
                 return;
             }
             const parsedUser = JSON.parse(storedUser);
-            setUserId(parsedUser.accountId);
+            setUserId(parsedUser.userId);
         } catch (error) {
             console.error('Error fetching user:', error);
         }
