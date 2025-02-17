@@ -62,9 +62,10 @@ export const fetchAddresses = async (userId) => {
   }
 }
 
-export const updateDefaultAddress = async (defaultAddress) => {
+export const updateDefaultAddress = async (userDefaultAddress) => {
+  console.log('userDefaultAddress', userDefaultAddress);
   try {
-    const response = await apiClient.put(`/region/updateDefault`, defaultAddress);
+    const response = await apiClient.put(`/region/updateDefault`, userDefaultAddress);
     return response.data;
   } catch (error) {
     console.error('Error updating default address:', error);

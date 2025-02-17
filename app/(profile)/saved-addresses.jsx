@@ -60,7 +60,7 @@ const SavedAddresses = () => {
   };
 
   const handleLocationSelect = (data, details) => {
-    // console.log('userAddresses:', userAddresses?.data?.addresses.length);
+    // console.log('userAddresses:', userAddresses?.data?.userAddresses.length);
     const selectedAddress = data.description;
     const { lat, lng } = details.geometry.location;
     const addressComponents = details.address_components;
@@ -91,7 +91,7 @@ const SavedAddresses = () => {
 
   const handleAddAddress = async () => {
     
-    if (userAddresses?.data?.addresses.some(address => address.fullAddress === newAddress?.fullAddress)) {
+    if (userAddresses?.data?.userAddresses.some(address => address.fullAddress === newAddress?.fullAddress)) {
       Alert.alert("Duplicate Address", "This address already exists in your saved addresses.");
       setNewAddress(null);
       return;
@@ -111,7 +111,7 @@ const SavedAddresses = () => {
         ...userAddresses,
         data: { 
           ...userAddresses.data,
-          addresses: [...(userAddresses?.data?.addresses || []), newEntry] 
+          userAddresses: [...(userAddresses?.data?.userAddresses || []), newEntry] 
         },
       };
 
@@ -144,8 +144,8 @@ const SavedAddresses = () => {
           </View>
         </View>
         {
-          // console.log("defaultAddress", userAddresses.data.defaultAddress.fullAddress) &&
-          userAddresses.data.defaultAddress && item.fullAddress === userAddresses.data.defaultAddress.fullAddress ? (
+          // console.log("userDefaultAddress", userAddresses.data.userDefaultAddress.fullAddress) &&
+          userAddresses.data.userDefaultAddress && item.fullAddress === userAddresses.data.userDefaultAddress.fullAddress ? (
             <Text className="text-base text-secondary ml-0 mt-2 font-semibold italic">default</Text>
           ) : (
             <TouchableOpacity
@@ -161,7 +161,7 @@ const SavedAddresses = () => {
             
                 await api.user.updateDefaultAddress({
                   userId: user.userId,
-                  defaultAddress: updatedAddress,
+                  userDefaultAddress: updatedAddress,
                 });
             
                 // Create a new updated userAddresses object with the updated default address
@@ -172,13 +172,13 @@ const SavedAddresses = () => {
                   ...userAddresses,
                   data: {
                     ...userAddresses.data,
-                    defaultAddress: updatedAddress,
+                    userDefaultAddress: updatedAddress,
                   },
                 };
             
                 setUserAddresses(updatedUserAddresses);
                 await AsyncStorage.setItem('userAddresses', JSON.stringify(updatedUserAddresses));
-                console.log("defaultAddress", updatedUserAddresses.data.defaultAddress.fullAddress);
+                console.log("userDefaultAddress", updatedUserAddresses.data.userDefaultAddress.fullAddress);
               }}
           >
             <Text className="text-base text-secondary ml-0 mt-2 underline">set as default</Text>
@@ -191,7 +191,7 @@ const SavedAddresses = () => {
         <TouchableOpacity 
           onPress={async () => {
             console.log("Trash icon pressed")
-            if(userAddresses.data.defaultAddress.fullAddress === item.fullAddress) {
+            if(userAddresses.data.userDefaultAddress.fullAddress === item.fullAddress) {
               Alert.alert("Default Address", "You cannot remove your default address.");
               return;
             }
@@ -211,7 +211,7 @@ const SavedAddresses = () => {
                       ...userAddresses,
                       data: {
                         ...userAddresses.data,
-                        addresses: userAddresses.data.addresses.filter(
+                        userAddresses: userAddresses.data.userAddresses.filter(
                           (address) => address.fullAddress !== item.fullAddress
                         ),
                       },
@@ -250,7 +250,7 @@ const SavedAddresses = () => {
         <View className="w-full min-h-[85vh] px-4">
           {/* FlatList to render dynamic addresses */}
           <FlatList
-            data={userAddresses?.data?.addresses}
+            data={userAddresses?.data?.userAddresses}
             keyExtractor={(item) => item.fullAddress}
             renderItem={renderAddress}
           />
@@ -262,7 +262,7 @@ const SavedAddresses = () => {
             <CustomButton
               title="Add new address"
               handlePress={() => {
-                if (userAddresses?.data?.addresses.length >= 5) {
+                if (userAddresses?.data?.userAddresses.length >= 5) {
                   Alert.alert("Limit Reached", "You can only save up to 5 addresses.");
                 } else {
                   setShowForm(true);

@@ -118,16 +118,16 @@ const Discover = ({ navigation }) => {
           if (storedAddresses && storedAddresses !== '{}') {
             const parsedAddresses = JSON.parse(storedAddresses);
             setUserAddresses(parsedAddresses);
-            if(parsedAddresses.data.defaultAddress){
-              const defaultAddress = parsedAddresses.data.defaultAddress;
+            if(parsedAddresses.data.userDefaultAddress){
+              const userDefaultAddress = parsedAddresses.data.userDefaultAddress;
               const newRegion = {
-                latitude: defaultAddress.lat,
-                longitude: defaultAddress.lng,
+                latitude: userDefaultAddress.lat,
+                longitude: userDefaultAddress.lng,
                 latitudeDelta: MIN_LATITUDE_DELTA,
                 longitudeDelta: MIN_LONGITUDE_DELTA
               };
               setRegion(newRegion);
-              setSelectedLocation({ latitude: defaultAddress.lat, longitude: defaultAddress.lng });
+              setSelectedLocation({ latitude: userDefaultAddress.lat, longitude: userDefaultAddress.lng });
             }
           }
         } catch (error) {

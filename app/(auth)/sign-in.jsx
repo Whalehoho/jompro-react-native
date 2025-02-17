@@ -44,8 +44,8 @@ const SignIn = () => {
         loginUser(message.user)
         console.log(message.user)
         // Fetch user addresses and set in global state
-        const addresses = await api.user.fetchAddresses(message.user.userId)
-        await AsyncStorage.setItem('userAddresses', JSON.stringify(addresses))
+        const userAddresses = await api.user.fetchAddresses(message.user.userId)
+        await AsyncStorage.setItem('userAddresses', JSON.stringify(userAddresses))
         // console.log('userAddresses', await AsyncStorage.getItem('userAddresses'))
 
         // Redirect to Home
