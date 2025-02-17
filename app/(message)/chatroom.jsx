@@ -28,9 +28,9 @@ const Chatroom = () => {
   useEffect(() => {
     const fetchEventsInMessages = async () => {
       try {
-        const eventMsgs = messages.filter((message) => message.type === 'event');
+        const eventMsgs = messages.filter((chatMessage) => chatMessage.type === 'event');
         if (eventMsgs.length === 0) return;
-        const events = await Promise.all(eventMsgs.map((event) => api.event.getEvent(event.message)));
+        const events = await Promise.all(eventMsgs.map((event) => api.event.getEvent(event.chatMessage)));
         setEventsInMessages(events);
       } catch (error) {
         console.error('Failed to fetch events:', error);
@@ -138,7 +138,7 @@ const Chatroom = () => {
 
     socket.emit('sendMessage', {
       channelId,
-      message: newMessage,
+      chatMessage: newMessage,
       type: 'text',
       senderId: userId,
     });
@@ -160,7 +160,7 @@ const Chatroom = () => {
             setShowModal(false);
             socket.emit('sendMessage', {
               channelId,
-              message: event.eventId,
+              chatMessage: event.eventId,
               type: 'event',
               senderId: userId,
             });
@@ -204,7 +204,7 @@ const Chatroom = () => {
                             minWidth: 50, // Set the minimum width for the message container
                           }}
                         >
-                          {item.message}
+                          {item.chatMessage}
                         </Text>
 
                       </View>
@@ -267,7 +267,7 @@ const Chatroom = () => {
                             className={`text-base font-plight rounded-md p-3 border-2 border-gray-800 
                                   ${(Number(item.senderId) === Number(userId)) ? 'bg-secondary-300' : 'bg-primary'}`}
                             style={{ minWidth: 80, minHeight: 80 }}
-                            onPress={() => { router.push(`/event-info?eventId=${item.message}`) }}
+                            onPress={() => { router.push(`/event-info?eventId=${item.chatMessage}`) }}
                           >
 
                             <Text className="flex flex-row items-center text-center">
@@ -278,21 +278,21 @@ const Chatroom = () => {
 
                             {/* Event Name in Bold */}
                             <Text className="font-bold text-lg">
-                              {eventsInMessages.find((event) => Number(event.data.eventId) === Number(item.message))?.data.eventName}
+                              {eventsInMessages.find((event) => Number(event.data.eventId) === Number(item.chatMessage))?.data.eventName}
                             </Text>
 
                             {'\n\n'}📍
 
                             {/* Location in Italics */}
                             <Text className="italic">
-                              {eventsInMessages.find((event) => Number(event.data.eventId) === Number(item.message))?.data.location.fullAddress}
+                              {eventsInMessages.find((event) => Number(event.data.eventId) === Number(item.chatMessage))?.data.location.fullAddress}
                             </Text>
 
                             {'\n\n'}
 
                             {/* Date in a Different Color */}
                             <Text className={`${Number(item.senderId) === Number(userId) ? 'text-red-800' : 'text-blue-500'}`}>
-                              📅 {new Date(eventsInMessages.find((event) => Number(event.data.eventId) === Number(item.message))?.data.startTime * 1000).toLocaleString('en-US', {
+                              📅 {new Date(eventsInMessages.find((event) => Number(event.data.eventId) === Number(item.chatMessage))?.data.startTime * 1000).toLocaleString('en-US', {
                                     year: 'numeric',
                                     month: '2-digit',
                                     day: '2-digit',
