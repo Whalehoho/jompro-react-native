@@ -159,16 +159,16 @@ const Discover = ({ navigation }) => {
           if (mapRef.current) {
             mapRef.current.animateToRegion(
               {
-                latitude: item.location.lat,
-                longitude: item.location.lng,
+                latitude: item.eventLocation.lat,
+                longitude: item.eventLocation.lng,
                 latitudeDelta: MIN_LATITUDE_DELTA,
                 longitudeDelta: MIN_LONGITUDE_DELTA,
               },
               500 // Duration in milliseconds
             );
           }
-          setSelectedLocation({ latitude: item.location.lat, longitude: item.location.lng });
-          setSelectedAddress(item.location.fullAddress);
+          setSelectedLocation({ latitude: item.eventLocation.lat, longitude: item.eventLocation.lng });
+          setSelectedAddress(item.eventLocation.fullAddress);
         }}
       >
         <View style={[
@@ -183,8 +183,8 @@ const Discover = ({ navigation }) => {
                 <Text className="text-base font-pregular text-gray-500" numberOfLines={1}>{item.eventAbout}</Text>
               </View>
               <View>
-                <Text className="text-sm font-regular">{item.location.region? item.location.region : item.location.city}</Text>
-                <Text className="text-sm font-regular">{item.duration? item.duration/3600 : 0} hour(s) event </Text>
+                <Text className="text-sm font-regular">{item.eventLocation.region? item.eventLocation.region : item.eventLocation.city}</Text>
+                <Text className="text-sm font-regular">{item.eventDuration? item.eventDuration/3600 : 0} hour(s) event </Text>
               </View>
             </View>
             <View className="flex-col items-end justify-between h-full">
@@ -247,8 +247,8 @@ const Discover = ({ navigation }) => {
 
     // console.log('Rendering event marker:', event.eventId);
   
-    const eventLat = event.location.lat;
-    const eventLng = event.location.lng;
+    const eventLat = event.eventLocation.lat;
+    const eventLng = event.eventLocation.lng;
   
     const offsetLat = eventLat + index * 0.00005;
     const offsetLng = eventLng + index * 0.00005;

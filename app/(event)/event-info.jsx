@@ -402,7 +402,7 @@ const EventInfo = () => {
                                 </View>
                                 <View className="ml-4 space-y-1 flex-1">
                                     {event && <Text className="font-psemibold text-lg text-gray-700">{new Date(event.startTime * 1000).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'Asia/Kuala_Lumpur' })}</Text>}
-                                    {event && <Text className="text-gray-600 text-xs font-pmedium">{new Date(event.startTime * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })} - {new Date(event.startTime * 1000 + event.duration * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })} ({event.duration/3600} hours)</Text>}
+                                    {event && <Text className="text-gray-600 text-xs font-pmedium">{new Date(event.startTime * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })} - {new Date(event.startTime * 1000 + event.eventDuration * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })} ({event.eventDuration/3600} hours)</Text>}
                                 </View>
                                 <View className="ml-2">
                                     <Image source={icons.next} tintColor='#374151' className="w-4 h-4 mr-1" />
@@ -415,8 +415,8 @@ const EventInfo = () => {
                                     <Image source={icons.location} tintColor='#374151' className="w-6 h-6" />
                                 </View>
                                 <View className="ml-4 space-y-1 flex-1">
-                                    {event  && <Text className="font-psemibold text-lg text-gray-700">{event.location.region ? event.location.region : event.location.city ? event.location.city : 'NULL'}</Text>}
-                                    {event && <Text className="text-gray-600 text-xs font-pmedium">{event.location.fullAddress ? event.location.fullAddress : 'NULL'}</Text>}
+                                    {event  && <Text className="font-psemibold text-lg text-gray-700">{event.eventLocation.region ? event.eventLocation.region : event.eventLocation.city ? event.eventLocation.city : 'NULL'}</Text>}
+                                    {event && <Text className="text-gray-600 text-xs font-pmedium">{event.eventLocation.fullAddress ? event.eventLocation.fullAddress : 'NULL'}</Text>}
                                 </View>
                                 <View className="ml-2">
                                     <Image source={icons.next} tintColor='#374151' className="w-4 h-4 mr-1" />

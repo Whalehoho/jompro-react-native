@@ -48,9 +48,9 @@ const NewEventForm = ({ onSubmit }) => {
     eventName: '',
     eventDescription: '',
     eventDate: null,
-    duration: '',
+    eventDuration: '',
     participants: '1',
-    location: null,
+    eventLocation: null,
     genderRestriction: '',
     ageRestriction: '',
     autoApprove: false,
@@ -182,15 +182,15 @@ const NewEventForm = ({ onSubmit }) => {
 
   const handleAddAddress = () => {
     if(!selectedAddress) return;
-    setForm({ ...form, location: selectedAddress });
+    setForm({ ...form, eventLocation: selectedAddress });
     setShowLocationModal(false);
   }
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     if(!form || !form.channel || !form.eventName || !form.eventDescription 
-        || !form.eventDate || !form.duration 
-        || !form.participants || !form.location || !form.genderRestriction 
+        || !form.eventDate || !form.eventDuration 
+        || !form.participants || !form.eventLocation || !form.genderRestriction 
         || !form.ageRestriction) {
             Alert.alert('Please fill in all fields');
             setIsSubmitting(false);
@@ -199,7 +199,7 @@ const NewEventForm = ({ onSubmit }) => {
 
     try{
       const eventDate = new Date(form.eventDate).getTime() / 1000;
-      const duration = convertDurationToSeconds(form.duration);
+      const eventDuration = convertDurationToSeconds(form.eventDuration);
       const ageRestriction = parseAgeRestriction(form.ageRestriction);
       const channelId = form.channel.channelId;
       await api.event.createEvent({
@@ -208,10 +208,10 @@ const NewEventForm = ({ onSubmit }) => {
         eventAbout: form.eventDescription,
         category: form.channel.category,
         organizerId: user.userId,
-        status: 'active',
+        eventStatus: 'active',
         startTime: eventDate,
-        duration: duration,
-        location: form.location,
+        eventDuration: eventDuration,
+        eventLocation: form.eventLocation,
         maxParticipants: parseInt(form.participants, 10),
         genderRestriction: form.genderRestriction,
         ageRestriction: ageRestriction,
@@ -247,7 +247,7 @@ const NewEventForm = ({ onSubmit }) => {
   };
 
   const handleDurationSelect = (selectedDuration) => {
-    setForm({ ...form, duration: selectedDuration });
+    setForm({ ...form, eventDuration: selectedDuration });
     setShowDurationModal(false); // Close the modal after selection
   };
 
@@ -304,7 +304,7 @@ const NewEventForm = ({ onSubmit }) => {
           <View className="flex-row space-x-4">
             <Image source={icons.stopwatch} className="w-6 h-6" tintColor={'#5e40b7'} />
             <Text className="font-pregular text-base">
-              {form.duration ? `${form.duration}` : 'Select Duration'}
+              {form.eventDuration ? `${form.eventDuration}` : 'Select Duration'}
             </Text>
           </View>
         </TouchableOpacity>

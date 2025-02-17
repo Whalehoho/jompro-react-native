@@ -127,9 +127,9 @@ const MyRSVPs = () => {
                         organizerId: event.data.organizerId,
                         eventId: event.data.eventId,
                         eventName: event.data.eventName,
-                        location: event.data.location,
+                        eventLocation: event.data.eventLocation,
                         start: new Date(event.data.startTime * 1000),
-                        end: new Date(event.data.startTime * 1000 + event.data.duration * 1000),
+                        end: new Date(event.data.startTime * 1000 + event.data.eventDuration * 1000),
                     }
                     setEvents(prev => {
                       const isDuplicate = prev.some(e => e.eventId === data.eventId);
@@ -157,9 +157,9 @@ const MyRSVPs = () => {
             organizerId: event.organizerId,
             eventId: event.eventId,
             eventName: event.eventName,
-            location: event.location,
+            eventLocation: event.eventLocation,
             start: new Date(event.startTime * 1000),
-            end: new Date(event.startTime * 1000 + event.duration * 1000),
+            end: new Date(event.startTime * 1000 + event.eventDuration * 1000),
           }
           setEvents(prev => {
             const isDuplicate = prev.some(e => e.eventId === data.eventId);
@@ -239,7 +239,7 @@ const handleOnPressEvent = (event) => {
   if(Number(event.organizerId) !== Number(userId)) {
     Alert.alert(
       `Your RSVP for "${event.title}"`, 
-      `📍 ${event.location.fullAddress}, ${event.start}-${event.end}`, 
+      `📍 ${event.eventLocation.fullAddress}, ${event.start}-${event.end}`, 
       [
         { text: "Close", style: "cancel" },
         { text: "Go to Event", onPress: () => router.push(`/event-info?eventId=${event.eventId}`) }
@@ -248,7 +248,7 @@ const handleOnPressEvent = (event) => {
   } else {
     Alert.alert(
       `Your Event "${event.title}"`, 
-      `📍 ${event.location.fullAddress}, ${event.start}-${event.end}`, 
+      `📍 ${event.eventLocation.fullAddress}, ${event.start}-${event.end}`, 
       [
         { text: "Close", style: "cancel" },
         { text: "Go to Event", onPress: () => router.push(`/event-info?eventId=${event.eventId}`) }
@@ -394,7 +394,7 @@ const handleOnPressEvent = (event) => {
                                 {event.eventName}
                         </Text>
 
-                        <Text className="text-gray-600 text-xs">📍 {event.location.fullAddress}</Text>
+                        <Text className="text-gray-600 text-xs">📍 {event.eventLocation.fullAddress}</Text>
                     </View>
                 </View>
                 </TouchableOpacity>

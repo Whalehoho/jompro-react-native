@@ -485,7 +485,7 @@ const ChannelInfo = () => {
                                                 {event.eventName}
                                         </Text>
 
-                                        <Text className="text-gray-600 text-xs">📍 {event.location.fullAddress}</Text>
+                                        <Text className="text-gray-600 text-xs">📍 {event.eventLocation.fullAddress}</Text>
                                     </View>
                                 </View>
                             </TouchableOpacity>

@@ -322,7 +322,7 @@ const Home = () => {
                             {event.eventName}
                     </Text>
 
-                    <Text className="text-primary text-xs">📍 {event.location.fullAddress}</Text>
+                    <Text className="text-primary text-xs">📍 {event.eventLocation.fullAddress}</Text>
                 </View>
             </View>
             </TouchableOpacity>
