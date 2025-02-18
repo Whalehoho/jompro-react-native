@@ -42,6 +42,8 @@ const Home = () => {
   const [subscription, setSubscription] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedStates, setSelectedStates] = useState(states_in_malaysia);
+  const [similarityScores, setSimilarityScores] = useState([]);
+  const [recommendationTypes, setRecommendationTypes] = useState([]);
   const [recommendedEvents, setRecommendedEvents] = useState([]);
 
   const toggleSelection = (state) => {
@@ -60,7 +62,7 @@ const Home = () => {
     };
   };
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (!user) return;
     if (selectedStates.length <= 0) return;
     const fetchRecommendedEvents = async () => {
@@ -70,17 +72,44 @@ const Home = () => {
         states: selectedStates,
       };
       const response = await api.event.getRecommendedEvents(data);
-      const recommendedEventIds = response.data;
+      const recommendedEventIdsAndSimilarityScores = response.data;
+      // console.log('recommendedEventIdsAndSimilarityScores:', recommendedEventIdsAndSimilarityScores);
+      // recommendedEventIdsAndSimilarityScores: {"content_based": [["85", 0.7123641530615953], ["81", 0.4485347611419461], ["82", 0.37638632635454045], ["84", 0.36952156194051206], ["83", 0.36231772144642793], ["88", 0.3094747936219101], ["87", 0.263415555922654]], "user_cf": [["83", 2], ["86", 1]]}
+      // use recommendedEvents to store the event data, including id, score, and type.
+      // Extract recommended event IDs
+      const recommendedEventIds = Object.values(recommendedEventIdsAndSimilarityScores)
+        .flat()
+        .map(item => item[0]);
+      // console.log('recommendedEventIds', recommendedEventIds);
+      // Extract similarity scores
+      const similarityScores = Object.values(recommendedEventIdsAndSimilarityScores)
+        .flat()
+        .map(item => item[1]);
+      setSimilarityScores(similarityScores);
+      // console.log('similarityScores:', similarityScores);
+
+      // Flatten and track types
+      const recommendationTypes = Object.entries(recommendedEventIdsAndSimilarityScores)
+      .flatMap(([type, events]) => events.map(() => type));
+
+      setRecommendationTypes(recommendationTypes);
+      // console.log('recommendationTypes:', recommendationTypes);
+
       const recommendedEvents = await Promise.all(
-        recommendedEventIds.map(async (eventId) => {
+        recommendedEventIds.map(async (eventId, index) => {
           const response = await api.event.getEvent(eventId);
+          if(!response || !response.data) {
+            // remove the similarity score if the event is not found based on current index
+            setSimilarityScores((prev) => prev.filter((item, i) => i !== index));
+            setRecommendationTypes((prev) => prev.filter((item, i) => i !== index));
+          }
           return response.data;
         })
       );
       setRecommendedEvents(recommendedEvents);
     };
     fetchRecommendedEvents();
-  }, [user, selectedStates]);
+  }, [user, selectedStates]));
 
 
   useEffect(() => {
@@ -296,35 +325,85 @@ const Home = () => {
         </View>
 
         <ScrollView className="mx-3 space-y-2">
-          {recommendedEvents.map((event, index) => (
-            <TouchableOpacity key={index} className="border border-black" onPress={() => { router.push(`/event-info?eventId=${event.eventId}`) }}>
-              <View className="flex-row bg-secondary-100">
+          {recommendedEvents.reduce((acc, event, index) => {
+            // Check if the event ID is already in the accumulator
+            const existingEvent = acc.find(e => e.eventId === event.eventId);
+
+            if (existingEvent) {
+              // If the event already exists, merge the recommendation info
+              const updatedEvent = { ...existingEvent };
+
+              // Combine recommendationTypes and similarityScores
+              if (recommendationTypes[index] === 'content_based') {
+                updatedEvent.similarityScore = updatedEvent.similarityScore
+                  ? updatedEvent.similarityScore
+                  : similarityScores[index];
+              }
+              if (recommendationTypes[index] === 'user_cf') {
+                updatedEvent.similarUsers = updatedEvent.similarUsers
+                  ? updatedEvent.similarUsers + 1
+                  : 1;
+              }
+
+              // Remove the existing event and push the updated version
+              acc = acc.filter(e => e.eventId !== existingEvent.eventId);
+              acc.push(updatedEvent);
+            } else {
+              // If the event is not in the accumulator, just add it
+              acc.push({
+                ...event,
+                similarityScore: recommendationTypes[index] === 'content_based' ? similarityScores[index] : undefined,
+                similarUsers: recommendationTypes[index] === 'user_cf' ? 1 : undefined,
+              });
+            }
+
+            return acc;
+          }, [])
+            .sort((a, b) => (b.similarityScore || 0) - (a.similarityScore || 0))
+            .map((event, index) => (
+            <TouchableOpacity
+              key={index}
+              className="rounded-lg border border-black"
+              onPress={() => { router.push(`/event-info?eventId=${event.eventId}`) }}
+            >
+              <View className="flex-row rounded-lg bg-primary">
                 {/* Date & Time Section (30%) */}
-                <View className="my-4 space-y-2 flex-[0.3] border-r border-black items-center justify-center">
-                    <Text className="font-psemibold text-sm text-primary">
-                        {new Date(event.startTime*1000).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Kuala_Lumpur' })}
-                    </Text>
-                    <Text className="font-psemibold text-sm text-primary">
-                        {new Date(event.startTime*1000).toLocaleDateString('en-GB', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        })}
-                    </Text>
-                    <Text className="text-primary text-xs font-pregular">
-                        {new Date(event.startTime*1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })}
-                    </Text>
+                <View className="my-4 space-y-2 flex-[0.3] border-r  border-black items-center justify-center">
+                  <Text className="font-psemibold text-sm text-secondary">
+                    {new Date(event.startTime * 1000).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Kuala_Lumpur' })}
+                  </Text>
+                  <Text className="font-psemibold text-sm text-secondary">
+                    {new Date(event.startTime * 1000).toLocaleDateString('en-GB', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    })}
+                  </Text>
+                  <Text className="text-secondary text-xs font-pregular">
+                    {new Date(event.startTime * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })}
+                  </Text>
                 </View>
 
                 {/* Event Name & Location (70%) */}
                 <View className="ml-4 my-4 space-y-1 flex-[0.7]">
-                    <Text className="font-psemibold text-base text-primary" numberOfLines={1} ellipsizeMode="tail">
-                            {event.eventName}
-                    </Text>
+                  <Text className="font-psemibold text-base text-secondary" numberOfLines={1} ellipsizeMode="tail">
+                    {event.eventName}
+                  </Text>
+                  <Text className="text-secondary-100 text-xs">📍 {event.eventLocation.fullAddress}</Text>
 
-                    <Text className="text-primary text-xs">📍 {event.eventLocation.fullAddress}</Text>
+                  {/* Show similarity score and similar users only if applicable */}
+                  {event.similarityScore && (
+                    <Text className="text-black text-xs font-pbold">
+                      Similarity Score: {event.similarityScore.toFixed(2)}
+                    </Text>
+                  )}
+                  {event.similarUsers && (
+                    <Text className="text-black text-xs font-pbold">
+                      {event.similarUsers} similar user(s) in this event
+                    </Text>
+                  )}
                 </View>
-            </View>
+              </View>
             </TouchableOpacity>
           ))}
         </ScrollView>

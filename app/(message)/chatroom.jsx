@@ -285,7 +285,7 @@ const Chatroom = () => {
 
                             {/* Location in Italics */}
                             <Text className="italic">
-                              {eventsInMessages.find((event) => Number(event.data.eventId) === Number(item.chatMessage))?.data.location.fullAddress}
+                              {eventsInMessages.find((event) => Number(event.data.eventId) === Number(item.chatMessage))?.data.eventLocation.fullAddress}
                             </Text>
 
                             {'\n\n'}
