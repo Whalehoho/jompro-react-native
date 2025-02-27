@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, use } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, TextInput, Modal, FlatList, Switch, Alert } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -32,7 +32,7 @@ const categories = [
   { title: 'Garden', icon: icons.gardening }
 ];
 
-const NewChannelForm = ({ onSubmit }) => {
+const NewChannelForm = ({ onSubmit, channelId }) => {
   const [form, setForm] = useState({
     channelName: '',
     channelDescription: '',
@@ -57,6 +57,25 @@ const NewChannelForm = ({ onSubmit }) => {
     fetchUserData();
   }, []);
 
+  useEffect(() => {
+    if(!channelId) return;
+    const fetchChannel = async () => {
+      try{
+        const response = await api.channel.getChannelByChannelId(channelId);
+        if(!response) return;
+        setForm({
+          channelName: response.data.channelName,
+          channelDescription: response.data.channelDesc,
+          category: response.data.category,
+          private: response.data.channelPrivacy === 'private',
+        });
+      } catch (error) {
+        console.error('Failed to load channel:', error);
+      }
+    };
+    fetchChannel();
+  }, [channelId]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -69,14 +88,27 @@ const NewChannelForm = ({ onSubmit }) => {
     }
 
     try{
-      const response = await api.channel.createChannel({
-        channelName: form.channelName,
-        channelDesc: form.channelDescription,
-        category: form.category,
-        channelPrivacy: form.private === true ? 'private' : 'public',
-        ownerId: user.userId,
-      });
-      Alert.alert('Success', 'Channel created successfully');
+      if(!channelId){
+        const response = await api.channel.createChannel({
+          channelName: form.channelName,
+          channelDesc: form.channelDescription,
+          category: form.category,
+          channelPrivacy: form.private === true ? 'private' : 'public',
+          ownerId: user.userId,
+        });
+        Alert.alert('Success', 'Channel created successfully');
+      }
+     else{
+        const response = await api.channel.updateChannel({
+          channelId: channelId,
+          channelName: form.channelName,
+          channelDesc: form.channelDescription,
+          category: form.category,
+          channelPrivacy: form.private === true ? 'private' : 'public',
+          ownerId: user.userId,
+        });
+        Alert.alert('Success', 'Channel updated successfully');
+     }
     } catch (error) {
       if (!error.response || error.response.status !== 401) {
         Alert.alert('Error', error.message || 'Something went wrong');
@@ -89,9 +121,9 @@ const NewChannelForm = ({ onSubmit }) => {
 
   return (
     <View className="px-2 py-2">
-      <Text className="font-pbold text-xl mb-8 text-center">Ready to create your own channel?</Text>
+      {/* <Text className="font-pbold text-xl mb-8 text-center">Ready to create your own channel?</Text> */}
 
-      <Text className="font-pmedium text-sm text-gray-800">What kind of community are you building? Choose a category that best represents your events and audience!</Text>
+      <Text className="font-pmedium text-sm text-gray-800">CATEGORY</Text>
 
       {/* Horizontal ScrollView with two rows */}
       <ScrollView
@@ -140,9 +172,9 @@ const NewChannelForm = ({ onSubmit }) => {
         </View>
       </ScrollView>
 
-      <View style={styles.separator} className="mt-8 mb-0" />
+      <View style={styles.separator} className="mt-8 mb-8" />
 
-      <Text className="font-pmedium text-sm text-gray-800 mt-8">Give your channel a memorable name & description to capture the spirit of your community!</Text>
+      <Text className="font-pmedium text-sm text-gray-800">CHANNEL NAME</Text>
 
 
 
@@ -186,7 +218,7 @@ const NewChannelForm = ({ onSubmit }) => {
       
       <View className="flex-row items-center justify-center mb-8">
         <CustomButton
-          title="Create Channel"
+          title="Submit"
           handlePress={handleSubmit}
           containerStyles="w-4/5 mt-7 rounded-md"
           textStyles="text-base"

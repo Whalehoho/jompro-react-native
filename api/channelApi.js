@@ -10,6 +10,16 @@ export const createChannel = async (channelData) => {
     }
 };
 
+export const updateChannel = async (channelData) => {
+    try {
+        const response = await apiClient.put('/channel/updateChannel', channelData, { timeout: 10000 });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating channel:', error);
+        throw error;
+    }
+}
+
 export const getChannelByChannelId = async (channelId) => {
     try {
         const response = await apiClient.get(`/channel/getByChannelId/${channelId}`, { timeout: 10000 });

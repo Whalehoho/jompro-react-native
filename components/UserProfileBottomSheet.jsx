@@ -1,8 +1,9 @@
 import { View, Text, Image, TouchableOpacity, Alert } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler';
 import React, { forwardRef, useImperativeHandle, useState, useRef, useMemo} from 'react'
-import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import CustomButton from './CustomButton';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import * as api from '../api';
 
@@ -56,6 +57,8 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
                 }
             }}
         >
+            <BottomSheetScrollView>
+                <ScrollView>
             <View style={{ padding: 20 }}>
                 {<Text>{userProfile?.userId}</Text>}
             </View>
@@ -245,6 +248,8 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
                     />
                 </BottomSheetView>
             }
+            </ScrollView>
+            </BottomSheetScrollView>
 
         </BottomSheet>
     );

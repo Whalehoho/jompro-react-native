@@ -2,14 +2,16 @@ import { StyleSheet, Text, View, Image, ScrollView, TouchableOpacity, Alert } fr
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState, useRef, use } from 'react';
+import React, { useEffect, useState, useRef, use, useMemo  } from 'react';
 import * as api from '../../api';
 import CustomButton from '../../components/CustomButton';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useGlobalContext } from '../../context/GlobalProvider';
 import UserProfileBottomSheet from '../../components/UserProfileBottomSheet';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';  // Import BottomSheetBackdrop
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { icons, images } from '../../constants';
+import NewEventForm from '../../components/forms/NewEventForm';
 
 const AttendeesProfileImages = ({ profiles }) => {
     return (
@@ -54,7 +56,7 @@ const AttendeesProfileImages = ({ profiles }) => {
 const EventInfo = () => {
     const [userId, setUserId] = useState(null);
     const { eventId } = useLocalSearchParams(); // Get eventId from URL
-    const { starredEvents, setIsEventStarred } = useGlobalContext();
+    const { isEditingEvent, setIsEditingEvent } = useGlobalContext();
     const [ event, setEvent ] = useState(null);
     const [isExpanded, setIsExpanded] = useState(false);
     const [isTruncated, setIsTruncated] = useState(false);
@@ -72,9 +74,31 @@ const EventInfo = () => {
     const bottomSheetRef = useRef(null);
     const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
 
-    const isEventStarred = starredEvents[eventId] || false;  
 
     const [shouldRerender, setShouldRerender] = useState(false);
+
+    const editBottomSheetRef = useRef(null);
+    const [isEditBottomSheetOpen, setIsEditBottomSheetOpen] = useState(false);
+    const snapPoints = useMemo(() => ['80%'], []);
+    const [showEditForm, setShowEditForm] = useState(null);  // State to manage which form is shown
+    const handleShowEditForm = (formType) => {
+    setShowEditForm(formType); // Set the form type to show
+    };
+    const handleCloseEditForm = () => {
+    setShowEditForm(null); // Close the form
+    };
+
+    const handleOpenEditBottomSheet = () => {
+    editBottomSheetRef.current?.expand();
+    setIsEditBottomSheetOpen(true);
+    };
+
+    const handleCloseEditBottomSheet = () => {
+    editBottomSheetRef.current?.close();
+    setIsEditBottomSheetOpen(false);
+    setShowEditForm(null);
+    setIsEditingEvent(false);
+    };
 
     useEffect(() => {
         setShouldRerender(prev => !prev); // Toggle state to trigger re-render
@@ -88,6 +112,17 @@ const EventInfo = () => {
         setIsBottomSheetOpen(true);
         bottomSheetRef.current?.open();
     };
+
+    useEffect(() => {
+        if (!isEditingEvent) return;
+        if(isEditingEvent && !isMyEvent){
+            Alert.alert('Unauthorized', 'You are not authorized to edit this event');
+            setIsEditingEvent(false);
+            return;
+        } else if (isEditingEvent && isMyEvent){
+            handleOpenEditBottomSheet();
+        }
+    }, [isEditingEvent]);
 
     useEffect(() => {
         const fetchPendingRSVP = async () => {
@@ -127,17 +162,7 @@ const EventInfo = () => {
             }
     }, [event, userId]);
 
-    useEffect(() => {
-        // Only reset starred state if this is the first time visiting the event
-        if (!(eventId in starredEvents)) {
-          setIsEventStarred(eventId, false); // Reset to false for this event
-        }
-        // setIsEventStarred(14, true);
-
-        // TO BE IMPLEMENTED:
-        // Fetch starred events from the server and update the starredEvents state
-
-    }, [eventId]);
+    
 
     useEffect(() => {
         // Fetch event details from the server
@@ -654,12 +679,56 @@ const EventInfo = () => {
 
             <UserProfileBottomSheet ref={bottomSheetRef} onClose={handleBottomSheetClose}/>
 
+            
+
         <StatusBar backgroundColor='#ffffff' style='auto' hidden={false} translucent={false} />
+
+        <BottomSheet
+            ref={editBottomSheetRef}
+            index={-1} // Initial state, -1 means closed, 0 means open
+            snapPoints={snapPoints} // Different positions or heights that the bottom sheet can snap to
+            enablePanDownToClose={true} // Enable the bottom sheet to be closed by panning down
+            onClose={handleCloseEditBottomSheet} // Handle the closing of the bottom sheet
+            backdropComponent={renderBackdrop} // Use the backdropComponent for the background
+            backgroundStyle={{
+            borderTopLeftRadius: 25,
+            borderTopRightRadius: 25,
+            backgroundColor: '#fecc1d',
+            }}
+        >
+                <BottomSheetScrollView>
+                <EditBottomSheetContent handleCloseEditForm={handleCloseEditForm} eventId={eventId}/>
+                </BottomSheetScrollView>
+        </BottomSheet>
+        
         </GestureHandlerRootView>
     );
-    };
+};
 
 export default EventInfo
+
+// Customize the backdrop to fade in/out
+const renderBackdrop = (props) => (
+  <BottomSheetBackdrop {...props} 
+    disappearsOnIndex={-1}  // Backdrop disappears when sheet is fully closed
+    appearsOnIndex={0}  // Backdrop appears when sheet is opened
+    opacity={0.5}  // Control the opacity of the backdrop
+  />
+);
+
+const EditBottomSheetContent = ({ handleCloseEditForm, eventId}) => {
+    return (
+      <ScrollView
+        className="px-4 py-6"
+        keyboardShouldPersistTaps={'handled'}  // Ensures that taps on touchable elements (like the address list) are registered even when the keyboard is open.
+      >
+        
+        <NewEventForm onSubmit={handleCloseEditForm} eventId={eventId}/> 
+        
+      </ScrollView>
+    );
+};
+
 
 const styles = StyleSheet.create({
     container: {
@@ -672,5 +741,10 @@ const styles = StyleSheet.create({
         height: 10,
         backgroundColor: '#d1d5db',
         marginVertical: 8
+      },
+      separator2: {
+        height: 1,              
+        backgroundColor: '#000', 
+        marginVertical: 8,       
       },
 })

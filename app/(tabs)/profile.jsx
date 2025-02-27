@@ -1,9 +1,9 @@
 import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, Alert, ActivityIndicator } from 'react-native'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { useGlobalContext } from '../../context/GlobalProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage'
-
+import { useFocusEffect } from '@react-navigation/native';
 import { icons } from '../../constants';
 import * as api from '../../api';
 import { Link, router } from 'expo-router';
@@ -43,6 +43,23 @@ const Profile = () => {
     fetchUserData();
   }, []);
 
+  
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUserDataWhenFocused = async () => {
+        try {
+          if(!user) {
+            return;
+          }
+          const response = await api.user.getUserById(user.userId);
+          setUser(response.data);
+          await AsyncStorage.setItem('user', JSON.stringify(response.data));
+        } catch (error) {
+          console.error('Failed to fetch user data:', error);
+        }
+      };
+      fetchUserDataWhenFocused();
+  }, []));
 
 
   const handleProfileImageUploadViaImgbb = async () => {
@@ -123,7 +140,7 @@ const Profile = () => {
   ];
 
   return (
-    <View className="flex-1 ">
+    <View className="flex-1 bg-white">
       <ScrollView contentContainerStyle={{ padding: 10, flexGrow: 1 }}>
         <TouchableOpacity
               onPress={handleLogout}
@@ -169,10 +186,10 @@ const Profile = () => {
         </TouchableOpacity>
 
         <View className="items-center mb-2">
-          <Text className="text-2xl text-gray-800 mt-0 mb-4 font-pblack">{user?.userName}</Text>
+          <Text className="text-2xl text-black mt-0 mb-4 font-pblack">{user?.userName}</Text>
           <View className="flex-row items-center bg-primary">
-            <Text className="text-xl text-gray-800  underline font-pbold text-center border-y-2 border-r-2 border-l-2 border-gray-800 p-1" style={{ flex: 1 }}>@{user?.userId}</Text>
-            <Text className="text-xl text-gray-800  font-pbold text-center border-y-2 border-r-2 p-1" style={{ flex: 1 }}>Verified ✔</Text>
+            <Text className="text-base text-gray-800  underline font-pbold text-center border-y-2 border-r-2 border-l-2 border-gray-800 p-1" style={{ flex: 1 }}>@{user?.userId}</Text>
+            <Text className="text-base text-gray-800  font-pbold text-center border-y-2 border-r-2 p-1" style={{ flex: 1 }}>{user?.verified === null? 'Unverified': user?.verified === true? 'Verified ✔': 'Verification failed'} </Text>
           </View>
         </View>
 

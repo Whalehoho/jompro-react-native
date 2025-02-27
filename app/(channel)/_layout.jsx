@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { icons } from '../../constants';
 import { useLocalSearchParams } from 'expo-router';
 
+import { useGlobalContext } from '../../context/GlobalProvider';
+
 
 const CustomHeaderTitle = ({ title }) => (
     <View className="flex-row items-center justify-center">
@@ -15,6 +17,7 @@ const CustomHeaderTitle = ({ title }) => (
 
 const EventLayout = () => {
     const { channelId } = useLocalSearchParams();
+    const { isEditingChannel, setIsEditingChannel } = useGlobalContext();
 
   return (
       <>
@@ -27,6 +30,17 @@ const EventLayout = () => {
                 backgroundColor: '#fff',
               },
               headerTitle: () => <CustomHeaderTitle title="Channel" />,
+              headerRight: () => (
+                              <TouchableOpacity onPress = {() => {
+                                  setIsEditingChannel(true);
+                              }}>
+                                  <Image
+                                      source={icons.edit}
+                                      resizeMode="contain"
+                                      className="w-4 h-4 mr-2"
+                                  />
+                              </TouchableOpacity>
+                            ),
               headerShadowVisible: true,
             }} 
           />

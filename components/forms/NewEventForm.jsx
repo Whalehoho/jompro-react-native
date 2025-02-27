@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, use } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, TextInput, Modal, FlatList, Switch, Alert } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -42,7 +42,7 @@ const genderRestrictions = ['No restrictions', 'Male', 'Female'];
 
 const ageRestrictions = ['No restrictions', 'Adult (18-50)', 'Senior (50+)'];
 
-const NewEventForm = ({ onSubmit }) => {
+const NewEventForm = ({ onSubmit, eventId }) => {
   const [form, setForm] = useState({
     channel: null,
     eventName: '',
@@ -57,6 +57,7 @@ const NewEventForm = ({ onSubmit }) => {
   });
 
   const [user, setUser] = useState(null);
+  const [event, setEvent] = useState(null);
   const [mySubscribedChannels, setMySubscribedChannels] = useState([]);
 
   useEffect(() => {
@@ -72,6 +73,33 @@ const NewEventForm = ({ onSubmit }) => {
     };
     fetchUserData();
   }, []);
+
+  useEffect(() => {
+    if(!eventId ) return;
+    const fetchEvent = async () => {
+      try{
+        const response = await api.event.getEvent(eventId);
+        if(!response) return;
+        setEvent(response.data);
+        setForm({
+          channel: mySubscribedChannels.find(channel => String(channel.channelId) === String(response.data.channelId)),
+          eventName: response.data.eventName,
+          eventDescription: response.data.eventAbout,
+          eventDate: new Date(response.data.startTime * 1000),
+          eventDuration: `${response.data.eventDuration / 3600} hour(s)`,
+          participants: response.data.maxParticipants.toString(),
+          eventLocation: response.data.eventLocation,
+          genderRestriction: response.data.genderRestriction,
+          ageRestriction: response.data.ageRestriction.min === -1 ? 'No restrictions' : response.data.ageRestriction.min === 18 ? 'Adult (18-50)' : 'Senior (50+)',
+          autoApprove: response.data.autoApprove,
+        });
+      } catch (error) {
+        console.error('Failed to fetch event:', error);
+      }
+    };
+    fetchEvent();
+  }, [eventId, mySubscribedChannels]);
+
 
   useEffect(() => {
     const fetchMySubscribedChannels = async () => {
@@ -168,8 +196,8 @@ const NewEventForm = ({ onSubmit }) => {
     const state = addressComponents.find(component =>
       component.types.includes('administrative_area_level_1')
     )?.long_name;
-    console.log('full address:', selectedAddress);
-    console.log('city:', locality);
+    // console.log('full address:', selectedAddress);
+    // console.log('city:', locality);
     setSelectedAddress({
         fullAddress: selectedAddress,
         state: state === 'Johor Darul Ta\'zim' ? 'Johor' : state,
@@ -182,6 +210,7 @@ const NewEventForm = ({ onSubmit }) => {
 
   const handleAddAddress = () => {
     if(!selectedAddress) return;
+    // console.log('selected address:', selectedAddress);
     setForm({ ...form, eventLocation: selectedAddress });
     setShowLocationModal(false);
   }
@@ -202,22 +231,42 @@ const NewEventForm = ({ onSubmit }) => {
       const eventDuration = convertDurationToSeconds(form.eventDuration);
       const ageRestriction = parseAgeRestriction(form.ageRestriction);
       const channelId = form.channel.channelId;
-      await api.event.createEvent({
-        channelId: channelId,
-        eventName: form.eventName,
-        eventAbout: form.eventDescription,
-        category: form.channel.category,
-        organizerId: user.userId,
-        eventStatus: 'active',
-        startTime: eventDate,
-        eventDuration: eventDuration,
-        eventLocation: form.eventLocation,
-        maxParticipants: parseInt(form.participants, 10),
-        genderRestriction: form.genderRestriction,
-        ageRestriction: ageRestriction,
-        autoApprove: form.autoApprove,
+      if(!eventId){
+        await api.event.createEvent({
+          channelId: channelId,
+          eventName: form.eventName,
+          eventAbout: form.eventDescription,
+          category: form.channel.category,
+          organizerId: user.userId,
+          eventStatus: 'active',
+          startTime: eventDate,
+          eventDuration: eventDuration,
+          eventLocation: form.eventLocation,
+          maxParticipants: parseInt(form.participants, 10),
+          genderRestriction: form.genderRestriction,
+          ageRestriction: ageRestriction,
+          autoApprove: form.autoApprove,
+        });
+      } else {
+        await api.event.updateEvent({
+          eventId: eventId,
+          channelId: channelId,
+          eventName: form.eventName,
+          eventAbout: form.eventDescription,
+          category: form.channel.category,
+          organizerId: user.userId,
+          eventStatus: 'active',
+          startTime: eventDate,
+          eventDuration: eventDuration,
+          eventLocation: form.eventLocation,
+          maxParticipants: parseInt(form.participants, 10),
+          genderRestriction: form.genderRestriction,
+          ageRestriction: ageRestriction,
+          autoApprove: form.autoApprove,
       });
-      Alert.alert('Success', 'Event created successfully');
+      }
+      
+      Alert.alert('Success', 'Event updated successfully');
     } catch (error) {
       if (!error.response || error.response.status !== 401) {
         Alert.alert('Error', error.message || 'Something went wrong');
@@ -229,17 +278,34 @@ const NewEventForm = ({ onSubmit }) => {
   };
 
   const handleDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || date;
-    if(mode == 'date') {
-      showMode('time');
-      setShowDatePicker(true);
-    } else {
-      setShowDatePicker(false);
-    }
-    setDate(currentDate); // Update the date in state
-    // setForm({ ...form, eventDate: currentDate.toLocaleString() }); // Add the selected date to the form state
-    setForm({ ...form, eventDate: currentDate });
-  };
+    // console.log("selected date:", selectedDate);
+    
+    if (!selectedDate) return; // Avoid updating if no date is selected
+
+    setShowDatePicker(mode === 'date'); // Keep picker open only for time selection
+
+    setDate((prevDate) => {
+        let currentDate = prevDate || new Date(); // Use existing date if available
+        if (mode === "time") {
+            // Preserve the previously selected date but update the time
+            currentDate = new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                currentDate.getDate(),
+                selectedDate.getHours(),
+                selectedDate.getMinutes()
+            );
+        } else {
+            // If selecting a date, just update to the new selection
+            currentDate = selectedDate;
+            showMode("time"); // Switch to time picker after selecting date
+        }
+
+        setForm({ ...form, eventDate: currentDate }); // Update form with new date
+        return currentDate; // Update state with the new date
+    });
+};
+
 
   const showMode = (currentMode) => {
     setShowDatePicker(true);
@@ -271,8 +337,8 @@ const NewEventForm = ({ onSubmit }) => {
   };
 
   return (
-    <View className="px-2 py-2">
-      <Text className="font-pbold text-xl mb-8 text-center">Ready to host your own event?</Text>
+    <ScrollView className="px-2 py-2">
+      {/* <Text className="font-pbold text-xl mb-8 text-center">Ready to host your own event?</Text> */}
 
       <Text className="font-pmedium text-sm text-gray-800">CHANNEL</Text>
 
@@ -317,7 +383,7 @@ const NewEventForm = ({ onSubmit }) => {
           <View className="flex-row space-x-4">
           <Image source={icons.pin} className="w-6 h-6" tintColor={'#5e40b7'} />
             <Text className="font-pregular text-base">
-                {selectedAddress ? `${selectedAddress.fullAddress}` : 'Select Location'}
+                {selectedAddress ? `${selectedAddress.fullAddress}` : form.eventLocation ? form.eventLocation.fullAddress : 'Select Location'}
             </Text>
           </View>
         </TouchableOpacity>
@@ -602,14 +668,14 @@ const NewEventForm = ({ onSubmit }) => {
 
       <View className="flex-row items-center justify-center mb-8">
         <CustomButton
-          title="Upload Event"
+          title="Submit"
           handlePress={handleSubmit}
           containerStyles="w-4/5 mt-7 rounded-md"
           textStyles="text-base"
           isLoading={isSubmitting}
         />
       </View>
-    </View>
+    </ScrollView>
   );
 };
 

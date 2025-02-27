@@ -103,4 +103,24 @@ export const getProfilebyId = async (userId) => {
   }
 }
 
+export const verifyFace = async (faceData) => {
+  try {
+    const response = await apiClient.post('/user/verifyFace', faceData);
+    return response.data;
+  } catch (error) {
+    console.error('Error verifying face:', error);
+    throw error;
+  }
+}
+
+export const getUserById = async (userId) => {
+  try {
+    const response = await apiClient.get(`/user/userId/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    throw error;
+  }
+}
+
 

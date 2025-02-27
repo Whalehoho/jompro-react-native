@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { use, useEffect, useRef, useState } from 'react';
 import { SafeAreaView, Dimensions, View, Text, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Camera, useCameraDevice, useCameraFormat, useFrameProcessor, useSkiaFrameProcessor } from 'react-native-vision-camera';
@@ -11,6 +11,7 @@ import RNFS from 'react-native-fs';
 import { icons } from '../../constants';
 import { Alert } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 
 import * as api from '../../api'
@@ -23,10 +24,12 @@ const AnimatedCircle = Animated.createAnimatedComponent(SvgCircle);
 
 
 const LivenessVerification = () => {
-
+    const [userId, setUserId] = useState(null);
     const device = useCameraDevice('front');
     const camera = useRef(null);
     const isFocused = useIsFocused();
+    const isProcessingRef = useRef(false);
+    const [isCaptured, setIsCaptured] = useState(false); // New state to track if capture has been done
 
     const faceDetectionOptions = useRef( {
         // see FaceDetectionOptions
@@ -58,6 +61,27 @@ const LivenessVerification = () => {
         strokeDashoffset: progressCircle.value,
     }));
 
+    useEffect(() => {
+        const fetchUserId = async () => {
+            try {
+                const storedUser = await AsyncStorage.getItem('user');
+                if (!storedUser) {
+                    console.error('User not found in storage');
+                    return;
+                }
+                const parsedUser = JSON.parse(storedUser);
+                setUserId(parsedUser.userId);
+            } catch (error) {
+                console.error('Error fetching user:', error);
+            }
+        };
+        fetchUserId();
+    }, []);
+
+    useEffect(() => {
+        setIsCaptured(false); // Reset the state when the screen is focused
+    }, [isFocused]);
+
 
     useEffect(() => {
         const getPermissions = async () => {
@@ -84,21 +108,19 @@ const LivenessVerification = () => {
         const firstFace = faces[0];
         const faceCenterX = firstFace.bounds.x + firstFace.bounds.width / 2;
         const faceCenterY = firstFace.bounds.y + firstFace.bounds.height / 2;
-
+    
         const circleCenterX = width / 2;
         const circleCenterY = height / 4;
         const circleRadius = width * ratio;
-
+    
         const distanceFromCenter = Math.sqrt(
             Math.pow(faceCenterX - circleCenterX, 2) +
             Math.pow(faceCenterY - circleCenterY, 2)
         );
-
+    
         if (distanceFromCenter <= circleRadius + 25) {
-            // console.log('Face detected:', firstFace.bounds);
             setFaceDetected(firstFace);
-
-            // Check if the action is performed and move to the next action
+    
             switch(actionToPerform[actionIndex]) {
                 case 'Blink':
                     if(firstFace.leftEyeOpenProbability < 0.2 && firstFace.rightEyeOpenProbability < 0.2) {
@@ -126,17 +148,17 @@ const LivenessVerification = () => {
                     }
                     break;
                 case 'Look Down':
-                    if(firstFace.pitchAngle < -10) {
-                        setActionIndex(actionIndex + 1);
+                    if(firstFace.pitchAngle < -10 && !isCaptured) { // Check if capture has not been done
+                        setIsCaptured(true); // Set the state to true to prevent future calls
                         captureAndCropFace(firstFace.bounds);
-                        Alert.alert('Face biomeatric captured', 'Please wait while we verify your face, you can exit the screen now.');
+                        setActionIndex(actionIndex + 1);
+                        Alert.alert('Face biometric captured', 'Please wait while we verify your face, you can exit the screen now.');
                     }
                     break;
                 default:
                     break;
             }
-
-            // setStrokeDashoffset(circumference - (circumference * (actionIndex) / actionToPerform.length));
+    
             progressCircle.value = withTiming(
                 circumference - (circumference * (actionIndex) / actionToPerform.length), 
                 { duration: 500 }
@@ -145,49 +167,42 @@ const LivenessVerification = () => {
         } else {
             setFaceDetected(null);
             setActionIndex(0);
-            // setStrokeDashoffset(circumference);
             progressCircle.value = circumference;
         }
     });
-
+    
     async function captureAndCropFace(bounds) {
-        // console.log('capturing and cropping face');
+        if (isProcessingRef.current) return;
+        isProcessingRef.current = true;
+    
+        setTimeout(() => {
+            isProcessingRef.current = false;
+        }, 3000); // Prevents multiple calls within 3 seconds
+    
         const photo = await camera.current.takePhoto({
             quality: 1,
         });
-        // console.log('Photo Width:', photo.width, 'Photo Height:', photo.height);
-        // console.log('Window Width:', width, 'Window Height:', height);
-        // const scaleX = photo.width / width;
-        // const scaleY = photo.height / height;
-        // console.log('Scale X:', scaleX, 'Scale Y:', scaleY);
-        // const cropData = {
-        //     offset: { 
-        //         x: bounds.x * scaleX, 
-        //         y: bounds.y * scaleY,
-        //     },
-        //     size: { 
-        //         width: bounds.width * scaleX, 
-        //         height: bounds.width * scaleX,
-        //     },
-        //     includeBase64: true,
-        // }
+        
         const uri = `file://${photo.path}`;
         console.log('Captured Image URI:', uri);
-        // const croppedImage = await ImageEditor.cropImage(uri, cropData);
-        // console.log('Cropped Image URI:', croppedImage.uri);
-        // const localUri = croppedImage.uri;
         const filename = uri.split('/').pop();
         const type = 'image/jpeg';
-
-        const data = await api.imgbb.uploadImage({
+    
+        const response = await api.imgbb.uploadImage({
             uri: uri,
-            // uri: localUri,
             name: filename,
             type: type,
         });
+    
+        console.log('Url:', response.data.url);
+    
+        const data = await api.user.verifyFace({
+            userId: userId,
+            imgUrl: response.data.url,
+        });
 
-        // console.log('Image uploaded:', data);
-
+        setIsCaptured(false); // Reset the state after the verification is done
+    
         return data;
     }
       

@@ -2,14 +2,16 @@ import { StyleSheet, Text, View, Image, ScrollView, TouchableOpacity, Alert } fr
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState, useRef, use, forwardRef } from 'react';
+import React, { useEffect, useState, useRef, use, forwardRef, useMemo } from 'react';
 import * as api from '../../api';
 import CustomButton from '../../components/CustomButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';  // Import BottomSheetBackdrop
+import BottomSheet, { BottomSheetBackdrop, BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';  // Import BottomSheetBackdrop
 import { icons, images } from '../../constants';
 import UserProfileBottomSheet from '../../components/UserProfileBottomSheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import NewChannelForm from '../../components/forms/NewChannelForm';
+import { useGlobalContext } from '../../context/GlobalProvider';
 
 const categories = [
     { title: 'Outdoor', icon: icons.outdoor },
@@ -38,6 +40,7 @@ const MAX_VISIBLE_EVENTS = 3;
 const ChannelInfo = () => {
     const { channelId } = useLocalSearchParams();
     const [channel, setChannel] = useState(null);
+    const { isEditingChannel, setIsEditingChannel } = useGlobalContext();
     const [icon, setIcon] = useState(null);
     const [isExpanded, setIsExpanded] = useState(false);
     const [isTruncated, setIsTruncated] = useState(false);
@@ -61,6 +64,41 @@ const ChannelInfo = () => {
     const displayedEvents = showAllEvents ? events : events.slice(0, MAX_VISIBLE_EVENTS);
 
     const [shouldRerender, setShouldRerender] = useState(false);
+
+    const editBottomSheetRef = useRef(null);
+    const [isEditBottomSheetOpen, setIsEditBottomSheetOpen] = useState(false);
+    const snapPoints = useMemo(() => ['80%'], []);
+    const [showEditForm, setShowEditForm] = useState(null);  // State to manage which form is shown
+    
+    const handleShowEditForm = (formType) => {
+        setShowEditForm(formType); // Set the form type to show
+    };
+    const handleCloseEditForm = () => {
+        setShowEditForm(null); // Close the form
+    };
+
+    const handleOpenEditBottomSheet = () => {
+        editBottomSheetRef.current?.expand();
+        setIsEditBottomSheetOpen(true);
+    };
+
+    const handleCloseEditBottomSheet = () => {
+        editBottomSheetRef.current?.close();
+        setIsEditBottomSheetOpen(false);
+        setShowEditForm(null);
+        setIsEditingChannel(false);
+    };
+
+    useEffect(() => {
+        if (!isEditingChannel) return;
+        if(isEditingChannel && !isMyChannel){
+            Alert.alert('Unauthorized', 'You are not authorized to edit this channel');
+            setIsEditingChannel(false);
+            return;
+        } else if (isEditingChannel && isMyChannel){
+            handleOpenEditBottomSheet();
+        }
+    }, [isEditingChannel]);
 
     useEffect(() => {
         setShouldRerender(prev => !prev); // Toggle state to trigger re-render
@@ -542,11 +580,52 @@ const ChannelInfo = () => {
             <UserProfileBottomSheet ref={bottomSheetRef} onClose={handleBottomSheetClose}/>
 
             <StatusBar backgroundColor='#ffffff' style='auto' hidden={false} translucent={false} />
+        
+            <BottomSheet
+            ref={editBottomSheetRef}
+            index={-1} // Initial state, -1 means closed, 0 means open
+            snapPoints={snapPoints} // Different positions or heights that the bottom sheet can snap to
+            enablePanDownToClose={true} // Enable the bottom sheet to be closed by panning down
+            onClose={handleCloseEditBottomSheet} // Handle the closing of the bottom sheet
+            backdropComponent={renderBackdrop} // Use the backdropComponent for the background
+            backgroundStyle={{
+            borderTopLeftRadius: 25,
+            borderTopRightRadius: 25,
+            backgroundColor: '#fecc1d',
+            }}
+        >
+                <BottomSheetScrollView>
+                <EditBottomSheetContent handleCloseEditForm={handleCloseEditForm} channelId={channelId}/>
+                </BottomSheetScrollView>
+        </BottomSheet>
+        
         </GestureHandlerRootView>
     )
 }
 
 export default ChannelInfo
+
+// Customize the backdrop to fade in/out
+const renderBackdrop = (props) => (
+    <BottomSheetBackdrop {...props} 
+      disappearsOnIndex={-1}  // Backdrop disappears when sheet is fully closed
+      appearsOnIndex={0}  // Backdrop appears when sheet is opened
+      opacity={0.5}  // Control the opacity of the backdrop
+    />
+  );
+  
+  const EditBottomSheetContent = ({ handleCloseEditForm, channelId}) => {
+      return (
+        <ScrollView
+          className="px-4 py-6"
+          keyboardShouldPersistTaps={'handled'}  // Ensures that taps on touchable elements (like the address list) are registered even when the keyboard is open.
+        >
+          
+          <NewChannelForm onSubmit={handleCloseEditForm} channelId={channelId}/> 
+          
+        </ScrollView>
+      );
+  };
 
 const styles = StyleSheet.create({
     separator: {

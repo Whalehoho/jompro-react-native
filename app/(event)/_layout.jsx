@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { icons } from '../../constants';
 import { useLocalSearchParams } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useGlobalContext } from '../../context/GlobalProvider';
 
@@ -16,8 +17,7 @@ const CustomHeaderTitle = ({ title }) => (
 
 const EventLayout = () => {
     const { eventId } = useLocalSearchParams();
-    const { starredEvents, setIsEventStarred } = useGlobalContext();
-    const isEventStarred = starredEvents[eventId] || false;
+    const { isEditingEvent, setIsEditingEvent } = useGlobalContext();
 
   return (
       <>
@@ -32,10 +32,10 @@ const EventLayout = () => {
               headerTitle: () => <CustomHeaderTitle title="Event" />,
               headerRight: () => (
                 <TouchableOpacity onPress = {() => {
-                    setIsEventStarred(eventId, !isEventStarred);
+                    setIsEditingEvent(true);
                 }}>
                     <Image
-                        source={isEventStarred ? icons.star : icons.unstar}
+                        source={icons.edit}
                         resizeMode="contain"
                         className="w-4 h-4 mr-2"
                     />

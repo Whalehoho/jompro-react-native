@@ -8,7 +8,8 @@ const GlobalProvider = ({ children }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [starredEvents, setStarredEvents] = useState({});
+    const [isEditingEvent, setIsEditingEvent] = useState(false);
+    const [isEditingChannel, setIsEditingChannel] = useState(false);
     const [rsvpView, setRsvpView] = useState(0); // 0 = list, 1 = calendar
 
     useEffect(() => {
@@ -41,7 +42,8 @@ const GlobalProvider = ({ children }) => {
     const logoutUser = () => {
         setIsLoggedIn(false);
         setUser(null);
-        setStarredEvents({});
+        setIsEditingEvent(false);
+        setIsEditingChannel(false);
         console.log('User logged out');
         AsyncStorage.removeItem('isLoggedIn');
         AsyncStorage.removeItem('user');
@@ -50,14 +52,7 @@ const GlobalProvider = ({ children }) => {
         AsyncStorage.removeItem('userToken');
     };
 
-    const setIsEventStarred = (eventId, isStarred) => {
-      setStarredEvents(prev => ({
-        ...prev,
-        [eventId]: isStarred,
-      }));
-      // TO BE IMPLEMENTED:
-      // Update the server with the new starred state.
-    };
+    
   
 
     return (
@@ -68,8 +63,10 @@ const GlobalProvider = ({ children }) => {
                 user,
                 loginUser,
                 logoutUser,
-                starredEvents,
-                setIsEventStarred,
+                isEditingEvent,
+                setIsEditingEvent,
+                isEditingChannel,
+                setIsEditingChannel,
                 rsvpView,
                 setRsvpView,
             }}
