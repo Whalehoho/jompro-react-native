@@ -37,12 +37,12 @@ const MySubscriptions = () => {
   const [myChannels, setMyChannels] = useState([]);
   const [userId, setUserId] = useState(null);
 
-  useFocusEffect(
-    useCallback(() => {
-      setMySubscribedChannels([]);
-      setMyChannels([]);
-    }, [])
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     setMySubscribedChannels([]);
+  //     setMyChannels([]);
+  //   }, [])
+  // );
 
   useFocusEffect(useCallback(() => {
     const fetchUserId = async () => {

@@ -15,6 +15,7 @@ apiClient.interceptors.request.use(async (config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // config.headers.Connection = "close"; // Force close connection after request
   return config;
 }, (error) => {
   return Promise.reject(error);

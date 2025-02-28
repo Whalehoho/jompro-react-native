@@ -74,7 +74,7 @@ const Home = () => {
       };
       const response = await api.event.getRecommendedEvents(data);
       const recommendedEventIdsAndSimilarityScores = response.data;
-      console.log('recommendedEventIdsAndSimilarityScores:', recommendedEventIdsAndSimilarityScores);
+      // console.log('recommendedEventIdsAndSimilarityScores:', recommendedEventIdsAndSimilarityScores);
       // recommendedEventIdsAndSimilarityScores: {"content_based": [["85", 0.7123641530615953], ["81", 0.4485347611419461], ["82", 0.37638632635454045], ["84", 0.36952156194051206], ["83", 0.36231772144642793], ["88", 0.3094747936219101], ["87", 0.263415555922654]], "user_cf": [["83", 2], ["86", 1]]}
       // use recommendedEvents to store the event data, including id, score, and type.
       // Extract recommended event IDs
@@ -327,49 +327,49 @@ const Home = () => {
             </TouchableOpacity>
         </View>
 
-        <ScrollView className="mx-3 space-y-5">
+        <ScrollView className="mx-3 space-y-5 mb-2">
         { recommendedEvents.reduce((acc, event, index) => {
           //print all evenid in acc, acc is an array of event
-          console.log(acc.map(e => e.eventId));
-    const eventId = String(event.eventId);
-    // console.log('eventId:', eventId);
+          // console.log(acc.map(e => e.eventId));
+          const eventId = String(event.eventId);
+          // console.log('eventId:', eventId);
 
-    // Find the index instead of using `find`
-    const existingIndex = acc.findIndex(e => String(e.eventId) === eventId);
+          // Find the index instead of using `find`
+          const existingIndex = acc.findIndex(e => String(e.eventId) === eventId);
 
-    if (existingIndex !== -1) {
-      console.log('eventId:', acc[existingIndex].eventId);
-        // Create a shallow copy of the existing event (to maintain immutability)
-        const updatedEvent = { ...acc[existingIndex] };
+          if (existingIndex !== -1) {
+            // console.log('eventId:', acc[existingIndex].eventId);
+              // Create a shallow copy of the existing event (to maintain immutability)
+              const updatedEvent = { ...acc[existingIndex] };
 
-        // Handle content-based recommendation similarity score
-        if (recommendationTypes[index] === 'content_based') {
-            updatedEvent.similarityScore = updatedEvent.similarityScore ?? similarityScores[index];
-        }
+              // Handle content-based recommendation similarity score
+              if (recommendationTypes[index] === 'content_based') {
+                  updatedEvent.similarityScore = updatedEvent.similarityScore ?? similarityScores[index];
+              }
 
-        // Handle user-based collaborative filtering
-        if (recommendationTypes[index] === 'user_cf') {
-            updatedEvent.similarUsers = similarityScores[index];
+              // Handle user-based collaborative filtering
+              if (recommendationTypes[index] === 'user_cf') {
+                  updatedEvent.similarUsers = similarityScores[index];
 
-            // if (eventId === '86') {
-            //     console.log(`Incrementing similarUsers for eventId: ${eventId} -> ${updatedEvent.similarUsers}`);
-            // }
-        }
+                  // if (eventId === '86') {
+                  //     console.log(`Incrementing similarUsers for eventId: ${eventId} -> ${updatedEvent.similarUsers}`);
+                  // }
+              }
 
-        // Replace the old event with the updated one
-        acc[existingIndex] = updatedEvent;
-    } else {
-        // Add new event with initial similarity score and similarUsers count
-        acc.push({
-            ...event,
-            eventId, // Ensure consistent type
-            similarityScore: recommendationTypes[index] === 'content_based' ? similarityScores[index] : undefined,
-            similarUsers: recommendationTypes[index] === 'user_cf' ? 1 : 0,
-        });
-    }
+              // Replace the old event with the updated one
+              acc[existingIndex] = updatedEvent;
+          } else {
+              // Add new event with initial similarity score and similarUsers count
+              acc.push({
+                  ...event,
+                  eventId, // Ensure consistent type
+                  similarityScore: recommendationTypes[index] === 'content_based' ? similarityScores[index] : undefined,
+                  similarUsers: recommendationTypes[index] === 'user_cf' ? 1 : 0,
+              });
+          }
 
-    return acc;
-}, [])
+          return acc;
+    }, [])
     .sort((a, b) => (b.similarityScore || 0) - (a.similarityScore || 0))
     .map((event, index) => (
         <TouchableOpacity

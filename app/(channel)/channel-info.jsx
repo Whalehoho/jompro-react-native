@@ -171,8 +171,8 @@ const ChannelInfo = () => {
         if(!channel) return;
         const fetchOwnerProfile = async () => {
             try {
-                const response = await api.user.getProfileUrlbyId(channel.ownerId);
-                setOwnerProfile(response.data.user_profile_img_url);
+                const response = await api.user.getProfilebyId(channel.ownerId);
+                setOwnerProfile(response.data);
             } catch (error) {
                 console.error('Error fetching owner profile:', error);
             }
@@ -409,7 +409,7 @@ const ChannelInfo = () => {
                     <View className="mx-4 space-y-2 mb-4" style={{ flex: 0.5, alignItems: 'flex-start' }}>
                         <Text className="font-pbold text-xl text-gray-700">Owner</Text>
                         <TouchableOpacity onPress={() => {
-                            bottomSheetRef.current?.setUserProfile({userId: channel.ownerId});
+                            bottomSheetRef.current?.setUserProfile(ownerProfile);
                             bottomSheetRef.current?.setType("owner");
                             bottomSheetRef.current?.setToDo("view");
                             bottomSheetRef.current?.setData(channel.channelId);
@@ -417,7 +417,7 @@ const ChannelInfo = () => {
                         }}>
                             <View className="flex-row">
                                 { ownerProfile && 
-                                    <Image source={{ uri: ownerProfile? ownerProfile : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }} className="w-14 h-14 rounded-full ml-0" />
+                                    <Image source={{ uri: ownerProfile? ownerProfile.userProfileImgUrl : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }} className="w-14 h-14 rounded-full ml-0" />
                                 }
                             </View>
                         </TouchableOpacity>
@@ -582,18 +582,18 @@ const ChannelInfo = () => {
             <StatusBar backgroundColor='#ffffff' style='auto' hidden={false} translucent={false} />
         
             <BottomSheet
-            ref={editBottomSheetRef}
-            index={-1} // Initial state, -1 means closed, 0 means open
-            snapPoints={snapPoints} // Different positions or heights that the bottom sheet can snap to
-            enablePanDownToClose={true} // Enable the bottom sheet to be closed by panning down
-            onClose={handleCloseEditBottomSheet} // Handle the closing of the bottom sheet
-            backdropComponent={renderBackdrop} // Use the backdropComponent for the background
-            backgroundStyle={{
-            borderTopLeftRadius: 25,
-            borderTopRightRadius: 25,
-            backgroundColor: '#fecc1d',
-            }}
-        >
+                ref={editBottomSheetRef}
+                index={-1} // Initial state, -1 means closed, 0 means open
+                snapPoints={snapPoints} // Different positions or heights that the bottom sheet can snap to
+                enablePanDownToClose={true} // Enable the bottom sheet to be closed by panning down
+                onClose={handleCloseEditBottomSheet} // Handle the closing of the bottom sheet
+                backdropComponent={renderBackdrop} // Use the backdropComponent for the background
+                backgroundStyle={{
+                borderTopLeftRadius: 25,
+                borderTopRightRadius: 25,
+                backgroundColor: '#fecc1d',
+                }}
+            >
                 <BottomSheetScrollView>
                 <EditBottomSheetContent handleCloseEditForm={handleCloseEditForm} channelId={channelId}/>
                 </BottomSheetScrollView>

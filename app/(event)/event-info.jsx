@@ -235,8 +235,8 @@ const EventInfo = () => {
         if(!event) return;
         const fetchEventOrganizerProfile = async () => {
             try {
-                const response = await api.user.getProfileUrlbyId(event?.organizerId);
-                setOrganizerProfile(response.data.user_profile_img_url);
+                const response = await api.user.getProfilebyId(event?.organizerId);
+                setOrganizerProfile(response.data);
             } catch (error) {
                 console.error('Failed to fetch event:', error);
             }
@@ -485,14 +485,14 @@ const EventInfo = () => {
                             <Text className="font-pbold text-xl text-gray-700">Hosted By</Text>
                             <View className="flex-row">
                                 <TouchableOpacity onPress={() => {
-                                    bottomSheetRef.current?.setUserProfile({ userId: event.organizerId });
+                                    bottomSheetRef.current?.setUserProfile(organizerProfile);
                                     bottomSheetRef.current?.setType('organizer');
                                     bottomSheetRef.current?.setToDo('view');
                                     bottomSheetRef.current?.setData(eventId);
                                     handleOpenBottomSheet();
                                 }}>
                                     { organizerProfile && 
-                                        <Image source={{ uri: organizerProfile? organizerProfile: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }} className="w-14 h-14 rounded-full ml-0 border-white border-1"
+                                        <Image source={{ uri: organizerProfile? organizerProfile.userProfileImgUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }} className="w-14 h-14 rounded-full ml-0 border-white border-1"
                                     /> }
                                 </TouchableOpacity>
                             </View>

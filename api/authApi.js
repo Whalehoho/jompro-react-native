@@ -20,3 +20,36 @@ export const register = async (userData) => {
     throw error;
   }
 };
+
+export const requestPasswordRecoveryCode = async (userEmail) => {
+  try {
+    const response = await apiClient.post('/auth/request-password-reset', { userEmail });
+    console.log('response data', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error requesting password recovery code:', error);
+    throw error;
+  }
+}
+
+export const verifyPasswordRecoveryCode = async (email, code) => {
+  try {
+    const response = await apiClient.post('/auth/verify-password-reset-code', { email, code });
+    console.log('response data', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error verifying password recovery code:', error);
+    throw error;
+  }
+}
+
+export const resetPassword = async (email, password) => {
+  try {
+    const response = await apiClient.post('/auth/reset-password', { email, password });
+    console.log('response data', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    throw error;
+  }
+}

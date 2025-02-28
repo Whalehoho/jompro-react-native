@@ -59,13 +59,27 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
         >
             <BottomSheetScrollView>
                 <ScrollView>
-            <View style={{ padding: 20 }}>
-                {<Text>{userProfile?.userId}</Text>}
+            <View className="m-5 flex ">
+                <View className="flex-row justify-start space-x-8">
+                    <Image
+                        source={{ uri: userProfile?.userProfileImgUrl }}
+                        style={{ width: 120, height: 120, borderRadius: 80, borderWidth: 1, borderColor: '#7257ca' }}
+                    />
+                    <View className="flex justify-center items-start">
+                        <Text className="text-2xl font-pbold">{userProfile?.userName? userProfile.userName: 'Unknown'}</Text>
+                        <Text className="text-lg font-pregular">Age: {userProfile?.userAge? userProfile.userAge: 'Unknown'}</Text>
+                        <Text className="text-lg font-pregular">Gender: {userProfile?.userGender? userProfile.userGender: 'Unknown'}</Text>
+                    </View>
+                </View>
+                <View className="flex justify-start items-center mt-5">
+                    <Text className="text-2xl font-pbold">Verification Status:  {userProfile?.verified? '✅':'❌'}</Text>
+                </View>
             </View>
 
             {/* Bottom Sheet Content */}
             {   type === "members" && toDo === "edit" &&
                 <BottomSheetView style={{ padding: 20 }}>
+                    <View className="flex-row justify-around">
                     <CustomButton
                         title="Remove"
                         handlePress={ () => 
@@ -99,6 +113,7 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
                         textStyles="text-base text-black"
                         isLoading={isSubmitting}
                     />
+                    </View>
                 </BottomSheetView>
 
             }
@@ -106,6 +121,7 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
             {
                 type === "subscriptions" &&
                 <BottomSheetView style={{ padding: 20 }}>
+                    <View className="flex-row justify-around">
                     <CustomButton
                         title="Accept"
                         handlePress={ () => 
@@ -173,12 +189,14 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
                         textStyles="text-base text-black"
                         isLoading={isSubmitting}
                     />
+                    </View>
                 </BottomSheetView>
             }
 
             {
                 type === "rsvp" && toDo === "edit" &&
                 <BottomSheetView style={{ padding: 20 }}>
+                    <View className="flex-row justify-around">
                     <CustomButton
                         title="Accept"
                         handlePress={ () => 
@@ -246,6 +264,7 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
                         textStyles="text-base text-black"
                         isLoading={isSubmitting}
                     />
+                    </View>
                 </BottomSheetView>
             }
             </ScrollView>

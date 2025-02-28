@@ -91,6 +91,10 @@ const SignIn = () => {
             <Text className="text-sm text-secondary font-pregular">Don't have an account?</Text>
             <Link href="/sign-up" className="text-sm text-secondary font-psemibold">Sign up</Link>
           </View>
+
+          <View className="justify-center pt-2 flex-row gap-2">
+            <Link href="/reset-password" className="text-sm text-secondary font-psemibold">Forgot Password</Link>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
