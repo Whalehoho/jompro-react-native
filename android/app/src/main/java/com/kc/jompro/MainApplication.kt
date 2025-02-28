@@ -1,4 +1,4 @@
-package com.kc.jompro
+package com.kc.jompro.production
 
 import android.app.Application
 import android.content.res.Configuration

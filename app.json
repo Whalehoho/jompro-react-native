@@ -30,7 +30,7 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
       ],
-      "package": "com.kc.jompro",
+      "package": "com.kc.jompro.production",
       "config": {
         "googleMaps": {
           "apiKey": ""

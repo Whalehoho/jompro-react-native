@@ -31,7 +31,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="jompro"/>
-        <data android:scheme="com.kc.jompro"/>
+        <data android:scheme="com.kc.jompro.production"/>
         <data android:scheme="exp+jompro"/>
       </intent-filter>
     </activity>

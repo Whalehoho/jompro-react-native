@@ -62,7 +62,7 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
             <View className="m-5 flex ">
                 <View className="flex-row justify-start space-x-8">
                     <Image
-                        source={{ uri: userProfile?.userProfileImgUrl }}
+                        source={ userProfile?.userProfileImgUrl? {uri: userProfile.userProfileImgUrl}: require('../assets/icons/account.png') }
                         style={{ width: 120, height: 120, borderRadius: 80, borderWidth: 1, borderColor: '#7257ca' }}
                     />
                     <View className="flex justify-center items-start">

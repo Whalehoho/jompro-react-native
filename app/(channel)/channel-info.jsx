@@ -266,7 +266,7 @@ const ChannelInfo = () => {
                  }}>
                     <Image
                     key={index}
-                    source={{ uri: profile.userProfileImgUrl? profile.userProfileImgUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s'}}
+                    source={profile.userProfileImgUrl? { uri: profile.userProfileImgUrl}: require('../../assets/icons/account.png')}
                     style={{
                         width: 60,
                         height: 60,
@@ -417,7 +417,7 @@ const ChannelInfo = () => {
                         }}>
                             <View className="flex-row">
                                 { ownerProfile && 
-                                    <Image source={{ uri: ownerProfile? ownerProfile.userProfileImgUrl : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }} className="w-14 h-14 rounded-full ml-0" />
+                                    <Image source={ ownerProfile?.userProfileImgUrl? { uri:ownerProfile.userProfileImgUrl} : require('../../assets/icons/account.png') } className="w-14 h-14 rounded-full ml-0" />
                                 }
                             </View>
                         </TouchableOpacity>

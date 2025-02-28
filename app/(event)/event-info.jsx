@@ -19,7 +19,7 @@ const AttendeesProfileImages = ({ profiles }) => {
           {profiles.slice(0, 3).map((profile, index) => (
             <Image
               key={index}
-              source={{ uri: profile.userProfileImgUrl? profile.userProfileImgUrl : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }}
+              source={profile.userProfileImgUrl? { uri: profile.userProfileImgUrl} : require('../../assets/icons/account.png') }
               style={{
                 width: 56,
                 height: 56,
@@ -492,7 +492,7 @@ const EventInfo = () => {
                                     handleOpenBottomSheet();
                                 }}>
                                     { organizerProfile && 
-                                        <Image source={{ uri: organizerProfile? organizerProfile.userProfileImgUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }} className="w-14 h-14 rounded-full ml-0 border-white border-1"
+                                        <Image source={organizerProfile?.userProfileImgUrl? { uri: organizerProfile.userProfileImgUrl}: require('../../assets/icons/account.png') } className="w-14 h-14 rounded-full ml-0 border-white border-1"
                                     /> }
                                 </TouchableOpacity>
                             </View>
@@ -525,7 +525,7 @@ const EventInfo = () => {
                                              }}>
                                                 <Image
                                                 key={index}
-                                                source={{ uri: profile.userProfileImgUrl? profile.userProfileImgUrl : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }}
+                                                source={profile.userProfileImgUrl? { uri: profile.userProfileImgUrl} : require('../../assets/icons/account.png') }
                                                 style={{
                                                     width: 60,
                                                     height: 60,
@@ -555,7 +555,7 @@ const EventInfo = () => {
                                                 }}>
                                                     <Image
                                                     key={index}
-                                                    source={{ uri: profile.userProfileImgUrl? profile.userProfileImgUrl : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFAMn65QIVqFZGQBV1otby9cY8r27W-ZGm_Q&s' }}
+                                                    source={profile.userProfileImgUrl? { uri: profile.userProfileImgUrl} : require('../../assets/icons/account.png') }
                                                     style={{
                                                         width: 60,
                                                         height: 60,

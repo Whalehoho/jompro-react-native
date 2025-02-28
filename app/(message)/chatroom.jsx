@@ -185,7 +185,7 @@ const Chatroom = () => {
 
                     {Number(item.senderId) !== Number(userId) && (
                       <Image
-                        source={{ uri: senderProfileImageCache[item.senderId].user_profile_img_url }}
+                        source={senderProfileImageCache[item.senderId].user_profile_img_url? { uri: senderProfileImageCache[item.senderId].user_profile_img_url } : require('../../assets/icons/account.png')}
                         style={styles.profileImage}
                       />
                     )}
