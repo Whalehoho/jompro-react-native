@@ -27,6 +27,7 @@ const AttendeesProfileImages = ({ profiles }) => {
                 marginLeft: index === 0 ? 0 : -14, // Overlapping effect
                 borderWidth: 1,
                 borderColor: "white",
+                tintColor: !profile.userProfileImgUrl ? '#5e40b7' : undefined,
               }}
             />
           ))}
@@ -493,6 +494,7 @@ const EventInfo = () => {
                                 }}>
                                     { organizerProfile && 
                                         <Image source={organizerProfile?.userProfileImgUrl? { uri: organizerProfile.userProfileImgUrl}: require('../../assets/icons/account.png') } className="w-14 h-14 rounded-full ml-0 border-white border-1"
+                                        style={{ tintColor: !organizerProfile.userProfileImgUrl ? '#5e40b7' : undefined }}
                                     /> }
                                 </TouchableOpacity>
                             </View>
@@ -533,6 +535,7 @@ const EventInfo = () => {
                                                     margin: 4, // Space between images
                                                     borderWidth: 2,
                                                     borderColor: "white",
+                                                    tintColor: !profile.userProfileImgUrl ? '#5e40b7' : undefined,
                                                 }}
                                                 />
                                             </TouchableOpacity>
@@ -563,6 +566,7 @@ const EventInfo = () => {
                                                         margin: 4, // Space between images
                                                         borderWidth: 2,
                                                         borderColor: "white",
+                                                        tintColor: !profile.userProfileImgUrl ? '#5e40b7' : undefined,
                                                     }}
                                                     />
                                                 </TouchableOpacity>
@@ -713,6 +717,7 @@ const renderBackdrop = (props) => (
     disappearsOnIndex={-1}  // Backdrop disappears when sheet is fully closed
     appearsOnIndex={0}  // Backdrop appears when sheet is opened
     opacity={0.5}  // Control the opacity of the backdrop
+    pressBehavior="none"
   />
 );
 

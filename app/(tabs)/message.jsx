@@ -146,9 +146,9 @@ const Message = () => {
                                 <Text className="font-psemibold text-lg text-center" numberOfLines={1} ellipsizeMode="tail">
                                         {channel.channelName}
                                 </Text>
-                                <Text className="font-pregular text-sm " numberOfLines={6} ellipsizeMode="tail">
+                                {/* <Text className="font-pregular text-sm " numberOfLines={6} ellipsizeMode="tail">
                                         {formatChannelDesc(channel.channelDesc)}
-                                </Text>
+                                </Text> */}
                             </View>
                             </View>
                         </TouchableOpacity>

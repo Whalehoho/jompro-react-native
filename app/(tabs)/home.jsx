@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, use } from 'react'
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomButton from '../../components/CustomButton';
-import { icons } from '../../constants';
+import { icons, images } from '../../constants';
 import * as api from '../../api';
 import { Link, router, useLocalSearchParams } from 'expo-router';
 
@@ -46,6 +46,7 @@ const Home = () => {
   const [recommendationTypes, setRecommendationTypes] = useState([]);
   const [recommendedEvents, setRecommendedEvents] = useState([]);
   const [similarUsersInEvent, setSimilarUsersInEvent] = useState([]);
+  const [textInputAlign, setTextInputAlign] = useState('center');
 
   const toggleSelection = (state) => {
     setSelectedStates((prev) =>
@@ -58,7 +59,7 @@ const Home = () => {
     // console.log('selected states:', selectedStates);
     const data = {
       user_id: user.userId,
-      top_n: 5,
+      top_n: 15,
       states: selectedStates,
     };
   };
@@ -69,7 +70,7 @@ const Home = () => {
     const fetchRecommendedEvents = async () => {
       const data = {
         user_id: user.userId,
-        top_n: 5,
+        top_n: 15,
         states: selectedStates,
       };
       const response = await api.event.getRecommendedEvents(data);
@@ -261,14 +262,15 @@ const Home = () => {
       <SafeAreaView className="flex-1 bg-white h-full">
         <View className="flex-row justify-around">
           <View className="flex-1 border-b-0 border-gray-800">
-            <View className="relative bg-primary">
+            <View className="relative pt-0 bg-primary">
               <TextInput
                 className="h-12 my-3 mx-3 px-3 rounded-3xl bg-white pl-5"  // Add some left padding for space
                 placeholder="Search for events & channels"
                 value={query}
                 onChangeText={setQuery}
-                onFocus={() => setIsFocused(true)} // Set focus to true when user focuses
-                onBlur={() => setIsFocused(false)} // Set focus to false when user blur
+                onFocus={() => {setIsFocused(true); setTextInputAlign('left')}} // Set focus to true when user focuses
+                onBlur={() => {setIsFocused(false); setTextInputAlign('center')}} // Set focus to false when user blur
+                style={{ textAlign: textInputAlign }}
               />
               {query.length > 0 && (
                 <TouchableOpacity
@@ -327,6 +329,10 @@ const Home = () => {
             </TouchableOpacity>
         </View>
 
+        { recommendedEvents.length <= 0 && (
+          <Image source={images.brokenRobot} className="w-[100%] h-[70%] mx-auto my-auto" />
+        )}
+
         <ScrollView className="mx-3 space-y-5 mb-2">
         { recommendedEvents.reduce((acc, event, index) => {
           //print all evenid in acc, acc is an array of event
@@ -376,15 +382,20 @@ const Home = () => {
             key={index}
             className="rounded-lg border border-primary shadow-lg"
             style={{
-                shadowColor: '#000',
+                shadowColor: 'rgba(254, 204, 29, 0)',
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.25,
                 shadowRadius: 3.84,
                 elevation: 5,
+                backgroundColor: 'rgba(254, 204, 29, 0)',
             }}
             onPress={() => { router.push(`/event-info?eventId=${event.eventId}`) }}
         >
-            <View className="flex-row rounded-lg bg-primary">
+            <View className="flex-row rounded-lg"
+                style={{
+                    backgroundColor: 'rgba(254, 204, 29, 0.8)',
+                }}
+            >
                 {/* Date & Time Section (30%) */}
                 <View className="my-4 space-y-2 flex-[0.3] border-r border-black items-center justify-center">
                     <Text className="font-psemibold text-base text-secondary">
@@ -400,10 +411,10 @@ const Home = () => {
 
                 {/* Event Name & Location (70%) */}
                 <View className="ml-4 my-4 space-y-1 flex-[0.7]">
-                    <Text className="font-psemibold text-lg text-secondary" numberOfLines={1} ellipsizeMode="tail">
+                    <Text className="font-psemibold text-lg text-secondary text-center" numberOfLines={1} ellipsizeMode="tail">
                         {event.eventName}
                     </Text>
-                    <Text className="text-secondary-100 text-sm mb-2">📍 {event.eventLocation.fullAddress}</Text>
+                    {/* <Text className="text-secondary-100 text-sm mb-2">📍 {event.eventLocation.fullAddress}</Text> */}
 
                     {/* Show similarity score and similar users only if applicable */}
                     {event.similarityScore !== undefined && (

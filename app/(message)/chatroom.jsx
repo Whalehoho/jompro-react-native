@@ -185,8 +185,14 @@ const Chatroom = () => {
 
                     {Number(item.senderId) !== Number(userId) && (
                       <Image
-                        source={senderProfileImageCache[item.senderId].user_profile_img_url? { uri: senderProfileImageCache[item.senderId].user_profile_img_url } : require('../../assets/icons/account.png')}
-                        style={styles.profileImage}
+                        source={senderProfileImageCache[item.senderId]?.user_profile_img_url? { uri: senderProfileImageCache[item.senderId].user_profile_img_url } : require('../../assets/icons/account.png')}
+                        style={{
+                          width: 40,
+                          height: 40, 
+                          borderRadius: 50, 
+                          margin: 5, 
+                          tintColor: !senderProfileImageCache[item.senderId]?.user_profile_img_url ? '#5e40b7' : undefined,
+                        }}
                       />
                     )}
 
@@ -233,8 +239,14 @@ const Chatroom = () => {
 
                     {Number(item.senderId) === Number(userId) && (
                       <Image
-                        source={{ uri: senderProfileImageCache[item.senderId].user_profile_img_url }}
-                        style={styles.profileImage}
+                      source={senderProfileImageCache[item.senderId]?.user_profile_img_url? { uri: senderProfileImageCache[item.senderId].user_profile_img_url } : require('../../assets/icons/account.png')}
+                        style={{
+                          width: 40,
+                          height: 40, 
+                          borderRadius: 50, 
+                          margin: 5, 
+                          tintColor: !senderProfileImageCache[item.senderId]?.user_profile_img_url ? '#5e40b7' : undefined,
+                        }}
                       />
                     )}
 

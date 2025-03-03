@@ -46,6 +46,20 @@ npm install expo-dev-client
 eas build --profile development --platform android
 adb install path/to/your-development-build.apk
 
+Create Production build
+========================
+eas build --profile production --platform android
+
+Use OTA (Over-the-Air) update
+========================
+After making changes to your JS/TS files, deploy updates without rebuilding by running:
+>eas update --branch=production --message "Fixed UI issues"
+This will push the update to users without requiring a reinstall.
+
+Convert .aab to .apks
+========================
+C:\Users\User\Downloads>java -jar bundletool-all-1.18.0.jar build-apks --bundle="xxx.aab" --output="jompro.apks" --mode=universal
+
 Get debug keystore SHA1
 ======================
 .\gradlew signingReport

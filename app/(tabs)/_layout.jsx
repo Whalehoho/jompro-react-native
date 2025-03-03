@@ -20,7 +20,7 @@ const TabIcon = ({ icon, color, name, focused }) => {
         className={`h-9 ${name ? 'w-7' : 'w-9'} ${!name ? 'mb-1' : ''}`}
       />
       {name && (
-        <Text className={`${focused ? 'font-psemibold' : 'font-pregular'} text-xs`} style={{ color: color }}>
+        <Text className={`${focused ? 'font-pbold' : 'font-pregular'} text-xs`} style={{ color: color }}>
           {name}
         </Text>
       )}
@@ -41,16 +41,16 @@ const BottomSheetContent = ({ handleShowForm, handleCloseForm, showForm }) => {
         <TouchableOpacity className="mt-2 mb-2"onPress={ () => {
               handleShowForm('new-channel');
           }}>
-            <View className="flex-row items-start justify-start">
+            <View className="flex-row items-start justify-between">
               <View>
                 <Image source={icons.broadcast} className="w-6 h-6" />
               </View>
               <View className="ml-6 flex-shrink">
                 <Text className="font-psemibold text-lg">Create Your Own Channel</Text>
-                <Text className="text-gray-800 text-xs font-pmedium">Start your own community! Whether you want a public space for hosting events or a private channel for exclusive members, you're in control. Subscribers can host events, RSVP, and join chat rooms to stay engaged. Build your audience, share ideas, and connect—your channel, your community! </Text>
+                {/* <Text className="text-gray-800 text-xs font-pmedium">Start your own community! Whether you want a public space for hosting events or a private channel for exclusive members, you're in control. Subscribers can host events, RSVP, and join chat rooms to stay engaged. Build your audience, share ideas, and connect—your channel, your community! </Text> */}
               </View>
               <View className="ml-2">
-                <Image source={icons.next} className="w-4 h-4 mr-1" />
+                <Image source={icons.next} className="w-6 h-6 mr-1" />
               </View>
             </View>
           </TouchableOpacity>
@@ -58,16 +58,16 @@ const BottomSheetContent = ({ handleShowForm, handleCloseForm, showForm }) => {
           <TouchableOpacity className="mt-4 mb-2"onPress={ () => {
               handleShowForm('new-event');
           }}>
-            <View className="flex-row items-start justify-start">
+            <View className="flex-row items-start justify-between">
               <View>
                 <Image source={icons.flag} className="w-6 h-6" />
               </View>
               <View className="ml-6 flex-shrink">
                 <Text className="font-psemibold text-lg">Host Your Own Event</Text>
-                <Text className="text-gray-800 text-xs font-pmedium">Organize events from the channels you're a part of. Set the date, choose the location, and share all the details to get everyone excited. Invite others to join, manage RSVPs, and create an experience that fosters connection. You'll bring your community together for meaningful interactions and unforgettable moments! </Text>
+                {/* <Text className="text-gray-800 text-xs font-pmedium">Organize events from the channels you're a part of. Set the date, choose the location, and share all the details to get everyone excited. Invite others to join, manage RSVPs, and create an experience that fosters connection. You'll bring your community together for meaningful interactions and unforgettable moments! </Text> */}
               </View>
               <View className="ml-2">
-                <Image source={icons.next} className="w-4 h-4 mr-1" />
+                <Image source={icons.next} className="w-6 h-6 mr-1"/>
               </View>
             </View>
           </TouchableOpacity>
@@ -88,6 +88,7 @@ const renderBackdrop = (props) => (
     disappearsOnIndex={-1}  // Backdrop disappears when sheet is fully closed
     appearsOnIndex={0}  // Backdrop appears when sheet is opened
     opacity={0.5}  // Control the opacity of the backdrop
+    pressBehavior="none"
   />
 );
 

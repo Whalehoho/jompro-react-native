@@ -5,6 +5,7 @@ import logo from "../assets/images/logo.png";
 import logoSmall from "../assets/images/logo-small.png";
 import empty from "../assets/images/empty.png";
 import landscape from "../assets/images/landscape.png";
+import brokenRobot from "../assets/images/404.png";
 
 
-export default { profile, thumbnail, path, logo, logoSmall, empty, landscape };
+export default { profile, thumbnail, path, logo, logoSmall, empty, landscape, brokenRobot };

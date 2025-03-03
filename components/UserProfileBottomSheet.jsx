@@ -36,6 +36,7 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
             disappearsOnIndex={-1}
             appearsOnIndex={0}
             opacity={0.5}
+            pressBehavior="none"
         />
     );
 
@@ -63,7 +64,7 @@ const UserProfileBottomSheet = forwardRef(({ onClose },ref) => {
                 <View className="flex-row justify-start space-x-8">
                     <Image
                         source={ userProfile?.userProfileImgUrl? {uri: userProfile.userProfileImgUrl}: require('../assets/icons/account.png') }
-                        style={{ width: 120, height: 120, borderRadius: 80, borderWidth: 1, borderColor: '#7257ca' }}
+                        style={{ width: 120, height: 120, borderRadius: 80, borderWidth: 1, borderColor: '#7257ca', tintColor: !userProfile?.userProfileImgUrl? '#5e40b7': undefined }}
                     />
                     <View className="flex justify-center items-start">
                         <Text className="text-2xl font-pbold">{userProfile?.userName? userProfile.userName: 'Unknown'}</Text>

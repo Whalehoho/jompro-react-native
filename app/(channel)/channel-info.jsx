@@ -274,6 +274,7 @@ const ChannelInfo = () => {
                         margin: 4, // Space between images
                         borderWidth: 2,
                         borderColor: "white",
+                        tintColor: !profile?.userProfileImgUrl ? '#5e40b7' : undefined,
                     }}
                     />
                 </TouchableOpacity>
@@ -417,7 +418,11 @@ const ChannelInfo = () => {
                         }}>
                             <View className="flex-row">
                                 { ownerProfile && 
-                                    <Image source={ ownerProfile?.userProfileImgUrl? { uri:ownerProfile.userProfileImgUrl} : require('../../assets/icons/account.png') } className="w-14 h-14 rounded-full ml-0" />
+                                    <Image source={ ownerProfile?.userProfileImgUrl? { uri:ownerProfile.userProfileImgUrl} : require('../../assets/icons/account.png') } className="w-14 h-14 rounded-full ml-0" 
+                                        style={{
+                                            tintColor: !ownerProfile?.userProfileImgUrl ? '#5e40b7' : undefined,
+                                        }}
+                                    />
                                 }
                             </View>
                         </TouchableOpacity>
@@ -611,6 +616,7 @@ const renderBackdrop = (props) => (
       disappearsOnIndex={-1}  // Backdrop disappears when sheet is fully closed
       appearsOnIndex={0}  // Backdrop appears when sheet is opened
       opacity={0.5}  // Control the opacity of the backdrop
+      pressBehavior="none"
     />
   );
   
