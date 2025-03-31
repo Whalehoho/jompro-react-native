@@ -1,0 +1,25 @@
+import Constants from 'expo-constants';
+
+const {
+  REACT_NATIVE_HOST,
+  BACKEND_PORT,
+  SOCKET_PORT,
+  IMGBB_API_KEY,
+  AWS_BUCKET_NAME,
+  AWS_REGION,
+  AWS_ACCESS_KEY_ID,
+  AWS_SECRET_ACCESS_KEY
+} = Constants.expoConfig.extra;
+
+const BASE_URL = `http://${REACT_NATIVE_HOST}:${BACKEND_PORT}`;
+const SOCKET_URL = `http://${REACT_NATIVE_HOST}:${SOCKET_PORT}`;
+
+export {
+  BASE_URL,
+  SOCKET_URL,
+  IMGBB_API_KEY,
+  AWS_BUCKET_NAME,
+  AWS_REGION,
+  AWS_ACCESS_KEY_ID,
+  AWS_SECRET_ACCESS_KEY
+};
