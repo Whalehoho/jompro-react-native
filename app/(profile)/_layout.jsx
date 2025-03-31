@@ -67,6 +67,10 @@ const ProfileLayout = () => {
           name="liveness-verification"
           options={{ headerShown: false}}
         />
+        <Stack.Screen
+          name="update"
+          options={{ headerShown: false }}
+        />
       </Stack>
     </>
   );

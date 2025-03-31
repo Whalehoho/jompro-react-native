@@ -43,6 +43,25 @@ const Profile = () => {
     fetchUserData();
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUserDataWhenFocused = async () => {
+        try {
+          const storedUser = await AsyncStorage.getItem('user');
+          if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            const response = await api.user.getUserById(parsedUser.userId);
+            setUser(response.data);
+            await AsyncStorage.setItem('user', JSON.stringify(response.data));
+          }
+        } catch (error) {
+          console.error('Failed to fetch user data:', error);
+        }
+      };
+      fetchUserDataWhenFocused();
+    }, [])
+  );
+
   
   useFocusEffect(
     useCallback(() => {
@@ -62,60 +81,133 @@ const Profile = () => {
   }, []));
 
 
-  const handleProfileImageUploadViaImgbb = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  
-    if (permissionResult.granted === false) {
-      Alert.alert('Permission required', 'You need to allow permission to upload a profile image.');
+  const handleProfileImageUpload = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    const albumPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted || !albumPermission.granted) {
+      Alert.alert("Permission required", "You need to allow camera and album access to upload a profile image.");
       return;
     }
-  
-    const pickerResult = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 1,
-      base64: true,
-    });
-  
-    if (!pickerResult.canceled) {
-      setLoading(true);
-      const localUri = pickerResult.assets[0].uri
-      const filename = localUri.split('/').pop();
-  
-      // Infer the type of the image
-      const match = /\.(\w+)$/.exec(filename);
-      const type = match ? `image/${match[1]}` : `image`;
 
-      try{
-        const data = await api.imgbb.uploadImage({
-          uri: localUri,
-          name: filename,
-          type: type,
-        });
-  
-        if(!data) {
-          Alert.alert('Error', 'Failed to upload image');
-          return;
-        }     
-  
-        const userData = {
-          userEmail: user.userEmail,
-          userProfileImgUrl: data.data.url,
-          userProfileImgDeleteUrl: data.data.delete_url
-        }
-  
-  
-        await api.user.updateProfileImage(userData);
-        setProfileImage(data.data.url);
-        await AsyncStorage.setItem('profileImage', data.data.url);
-      
+    // 📌 Let the user choose: Pick from gallery or Take a new photo
+    Alert.alert(
+      "Update Profile Image",
+      "Would you like to pick an image from the gallery or take a new photo?",
+      [
+        {
+          text: "📷 Take a Photo",
+          onPress: async () => {
+            await handleCaptureImage();
+          },
+        },
+        {
+          text: "🖼️ Choose from Album",
+          onPress: async () => {
+            await handlePickImage();
+          },
+        },
+        { text: "Cancel", style: "cancel" },
+      ]
+    );
+  };
 
-      } catch (error) {
-        console.error('Error updating profile image:', error);
-        Alert.alert('Error', 'Failed to update profile image');
-      } finally {
-        setLoading(false);
+  // 🖼️ **Function for Picking Image from Album**
+  const handlePickImage = async () => {
+    try {
+      const pickerResult = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 1,
+      });
+
+      if (!pickerResult.canceled) {
+        await processAndUploadImage(pickerResult.assets[0].uri);
       }
-  
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert("Error", "Failed to pick image.");
+    }
+  };
+
+  // 📷 **Function for Taking a New Photo**
+  const handleCaptureImage = async () => {
+    try {
+      const photoResult = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 1,
+      });
+
+      if (!photoResult.canceled) {
+        await processAndUploadImage(photoResult.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error capturing image:", error);
+      Alert.alert("Error", "Failed to capture image.");
+    }
+  };
+
+  // 🔼 **Function to Upload Image to S3**
+  const processAndUploadImage = async (localUri) => {
+    setLoading(true);
+
+    const filename = localUri.split("/").pop();
+
+    // Infer the type of the image
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : `image`;
+
+    // try{ //upload image to imgbb
+    //   const data = await api.imgbb.uploadImage({
+    //     uri: localUri,
+    //     name: filename,
+    //     type: type,
+    //   });
+
+    //   if(!data) {
+    //     Alert.alert('Error', 'Failed to upload image');
+    //     return;
+    //   }     
+
+    //   const userData = {
+    //     userEmail: user.userEmail,
+    //     userProfileImgUrl: data.data.url,
+    //     userProfileImgDeleteUrl: data.data.delete_url
+    //   }
+
+    //   await api.user.updateProfileImage(userData);
+    //   setProfileImage(data.data.url);
+    //   await AsyncStorage.setItem('profileImage', data.data.url);
+      
+    // } catch (error) {
+    //   console.error('Error updating profile image:', error);
+    //   Alert.alert('Error', 'Failed to update profile image');
+    // } finally {
+    //   setLoading(false);
+    // }
+
+    try { //upload image to s3
+      const data = await api.s3.uploadImageToS3(localUri, filename);
+
+      if (!data) {
+        Alert.alert("Error", "Failed to upload image");
+        return;
+      }
+
+      console.log("data return from s3:", data);
+
+      const userData = {
+        userEmail: user.userEmail,
+        userProfileImgUrl: data,
+      };
+
+      await api.user.updateProfileImage(userData);
+      setProfileImage(data);
+      await AsyncStorage.setItem("profileImage", data);
+    } catch (error) {
+      console.error("Error updating profile image:", error);
+      Alert.alert("Error", "Failed to update profile image");
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -132,10 +224,11 @@ const Profile = () => {
 
   const listItems = [
     { title: 'My Details', icon: icons.account, link: '/my-details' },
-    { title: 'My Events & RSVP', icon: icons.rsvp, link: '/my-rsvps' },
-    { title: 'My Channels & Subscriptions', icon: icons.broadcast, link: '/my-subscriptions' },
+    { title: 'My Events', icon: icons.rsvp, link: '/my-rsvps' },
+    { title: 'My Channels', icon: icons.broadcast, link: '/my-subscriptions' },
     { title: 'My Addresses', icon: icons.location, link: '/saved-addresses' },
     { title: 'Verification', icon: icons.faceId, link: '/liveness-verification' },
+    { title: 'Check for Updates', icon: icons.update, link: '/update' },
     
   ];
 
@@ -153,7 +246,7 @@ const Profile = () => {
           />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={handleProfileImageUploadViaImgbb} className="items-center mb-5">
+        <TouchableOpacity onPress={handleProfileImageUpload} className="items-center mb-5">
           <View className="relative w-40 h-40 justify-center items-center">
             <View
               className="w-40 h-40 rounded-full border-1 border-gray-300 overflow-hidden"

@@ -14,12 +14,19 @@
     },
     "updates": {
       "enabled": true,
-      "fallbackToCacheTimeout": 0
+      "channel": "production",
+      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LOAD",
+      "url": "https://u.expo.dev/67f67a60-8ab9-4dfc-914e-c30b02711025"
     },
+    "runtimeVersion": "1.0.0",
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "JomPro needs access to your Camera."
+      },
+      "runtimeVersion": {
+        "policy": "appVersion"
       }
     },
     "android": {
@@ -35,11 +42,7 @@
         "ACCESS_COARSE_LOCATION"
       ],
       "package": "com.kc.jompro.production",
-      "config": {
-        "googleMaps": {
-          "apiKey": ""
-        }
-      }
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "favicon": "./assets/favicon.png"

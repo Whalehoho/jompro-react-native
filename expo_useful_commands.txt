@@ -60,6 +60,9 @@ Convert .aab to .apks
 ========================
 C:\Users\User\Downloads>java -jar bundletool-all-1.18.0.jar build-apks --bundle="xxx.aab" --output="jompro.apks" --mode=universal
 
+==>Then rename jompro.apks to jompro.zip
+==>Extract and get the universal.apk
+
 Get debug keystore SHA1
 ======================
 .\gradlew signingReport

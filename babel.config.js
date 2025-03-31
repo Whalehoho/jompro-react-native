@@ -6,6 +6,7 @@ module.exports = function(api) {
       "nativewind/babel", 
       "react-native-worklets-core/plugin", 
       "react-native-reanimated/plugin",
+      "@babel/plugin-transform-class-static-block",
     ],
   };
 };

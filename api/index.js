@@ -6,3 +6,4 @@ export * as subscription from './subscriptionApi';
 export * as event from './eventApi';
 export * as rsvp from './rsvpApi';
 export * as query from './queryApi';
+export * as s3 from './s3Api';

@@ -12,6 +12,7 @@ import { icons } from '../../constants';
 import { Alert } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { ActivityIndicator } from 'react-native'; // Add ActivityIndicator for loading spinner
 
 
 import * as api from '../../api'
@@ -30,6 +31,7 @@ const LivenessVerification = () => {
     const isFocused = useIsFocused();
     const isProcessingRef = useRef(false);
     const [isCaptured, setIsCaptured] = useState(false); // New state to track if capture has been done
+    const [isLoading, setIsLoading] = useState(false); // State to track the loading status
 
     const faceDetectionOptions = useRef( {
         // see FaceDetectionOptions
@@ -178,6 +180,8 @@ const LivenessVerification = () => {
         setTimeout(() => {
             isProcessingRef.current = false;
         }, 3000); // Prevents multiple calls within 3 seconds
+
+        setIsLoading(true); // Set loading to true when verification starts
     
         const photo = await camera.current.takePhoto({
             quality: 1,
@@ -187,19 +191,30 @@ const LivenessVerification = () => {
         console.log('Captured Image URI:', uri);
         const filename = uri.split('/').pop();
         const type = 'image/jpeg';
+
+        const s3Url = await api.s3.uploadImageToS3(uri, filename);
     
-        const response = await api.imgbb.uploadImage({
-            uri: uri,
-            name: filename,
-            type: type,
-        });
-    
-        console.log('Url:', response.data.url);
+        // const response = await api.imgbb.uploadImage({
+        //     uri: uri,
+        //     name: filename,
+        //     type: type,
+        // });
+        // console.log('Url:', response.data.url);
     
         const data = await api.user.verifyFace({
             userId: userId,
-            imgUrl: response.data.url,
+            imgUrl: s3Url,
         });
+
+        console.log('Verification Data:', data);
+
+        setIsLoading(false); // Set loading to true when verification starts
+
+        // if (data.data.message === 'Success') {
+        //     Alert.alert('Verification Success', 'Your face has been successfully verified!');
+        // } else {
+        //     Alert.alert('Verification Failed', 'Sorry, we could not verify your face.');
+        // }
 
         setIsCaptured(false); // Reset the state after the verification is done
     
@@ -307,54 +322,14 @@ const LivenessVerification = () => {
                     </Text>
                 </View>
 
-                {/* <View className="absolute w-full items-center" style={{ top: height / 4 + width * ratio + 320 }}>
-                    <Text className="text-2xl text-black font-pmedium"> 
-                        {
-                            faceDetected ? 
-                                faceDetected.leftEyeOpenProbability < 0.2 && faceDetected.rightEyeOpenProbability < 0.2 ? 'blink' : '' 
-                            : ''
-                        }
-                    </Text>
-                </View> */}
-
-                {/* <View className="absolute w-full items-center" style={{ top: height / 4 + width * ratio + 320 }}>
-                    <Text className="text-2xl text-black font-pmedium"> 
-                        {
-                            faceDetected ? 
-                                faceDetected.smilingProbability> 0.8 ? 'smile' : '' 
-                            : ''
-                        }
-                    </Text>
-                </View> */}
-
-                {/* <View className="absolute w-full items-center" style={{ top: height / 4 + width * ratio + 320 }}>
-                    <Text className="text-2xl text-black font-pmedium"> 
-                        {
-                            faceDetected ? 
-                                faceDetected.yawAngle < -20 ? 'to right' 
-                                : faceDetected.yawAngle > 20 ? 'to left' 
-                                    : 'straight'
-                            : ''
-                        }
-
-                    </Text>
-                </View> */}
-
-                {/* <View className="absolute w-full items-center" style={{ top: height / 4 + width * ratio + 320 }}>
-                    <Text className="text-2xl text-black font-pmedium"> 
-                        {
-                            faceDetected ? 
-                                faceDetected.pitchAngle < -10 ? 'look down' 
-                                : faceDetected.pitchAngle > 5 ? 'look up' 
-                                    : 'still'
-                            : ''
-                        }
-
-                    </Text>
-                </View> */}
-
                 
 
+                
+                {/* {isLoading && (
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: height / 2, left: width / 10 *2 }}>
+                        <ActivityIndicator size="large" color="#fecc1d" />
+                    </View>
+                )} */}
                 
 
             </SafeAreaView>

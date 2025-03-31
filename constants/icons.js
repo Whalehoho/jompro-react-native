@@ -72,6 +72,7 @@ import ok from "../assets/icons/ok.png";
 import send from "../assets/icons/send.png";
 import filter from "../assets/icons/filter.png";
 import edit from "../assets/icons/editing.png";
+import update from "../assets/icons/update.png";
 
 export default {
   play,
@@ -148,4 +149,5 @@ export default {
   send,
   filter,
   edit,
+  update,
 };

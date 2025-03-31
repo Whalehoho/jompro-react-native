@@ -47,6 +47,8 @@ const SignUp = () => {
           <Text className="text-2xl text-secondary text-semibold mt-10 font-psemibold">Sign up to Jom Pro</Text>
           <FormField 
             title="Username"
+            subtitle="* Whitespaces not allowed"
+            subtitleStyle={'mb-0 text-secondary'}
             value={form.username}
             handleChangeText={(e) => setForm({ ...form, username: e })}
             otherStyles="mt-10"
@@ -60,6 +62,8 @@ const SignUp = () => {
           />
           <FormField 
             title="Password"
+            subtitle="* Whitespaces not allowed"
+            subtitleStyle={'mb-0 text-secondary'}
             value={form.password}
             handleChangeText={(p) => setForm({ ...form, password: p })}
             otherStyles="mt-7"

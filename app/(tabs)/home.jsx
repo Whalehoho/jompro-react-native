@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, FlatList, ActivityIndicator, TouchableWithoutFeedback, Keyboard, Modal, } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, FlatList, ActivityIndicator, TouchableWithoutFeedback, Keyboard, Modal, TouchableHighlight } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import React, { useState, useEffect, useCallback, use } from 'react'
 import { useFocusEffect } from '@react-navigation/native';
@@ -7,6 +7,8 @@ import CustomButton from '../../components/CustomButton';
 import { icons, images } from '../../constants';
 import * as api from '../../api';
 import { Link, router, useLocalSearchParams } from 'expo-router';
+import Swiper from 'react-native-deck-swiper';
+import { Dimensions } from 'react-native';
 
 const states_in_malaysia = [
   'Johor', 
@@ -27,6 +29,8 @@ const states_in_malaysia = [
   'Terengganu',
 
 ];
+
+const { width, height } = Dimensions.get('window');
 
 const Home = () => {
   const [user, setUser] = useState(null);
@@ -62,7 +66,18 @@ const Home = () => {
       top_n: 15,
       states: selectedStates,
     };
+
+    // Reset Swiper State
+    setCurrentCardIndex(0);
+    setDeckResetKey((prevKey) => prevKey + 1);
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      // When returning, ensure Swiper starts from the last swiped card
+      setDeckResetKey((prevKey) => prevKey + 1);
+    }, [])
+  );
 
   useFocusEffect(useCallback(() => {
     if (!user) return;
@@ -256,6 +271,151 @@ const Home = () => {
     );
   };
 
+  const preprocessEvents = (events) => {
+    return events.reduce((acc, event, index) => {
+      //print all evenid in acc, acc is an array of event
+      // console.log(acc.map(e => e.eventId));
+      const eventId = String(event.eventId);
+      // console.log('eventId:', eventId);
+
+      // Find the index instead of using `find`
+      const existingIndex = acc.findIndex(e => String(e.eventId) === eventId);
+
+      if (existingIndex !== -1) {
+        // console.log('eventId:', acc[existingIndex].eventId);
+          // Create a shallow copy of the existing event (to maintain immutability)
+          const updatedEvent = { ...acc[existingIndex] };
+
+          // Handle content-based recommendation similarity score
+          if (recommendationTypes[index] === 'content_based') {
+              updatedEvent.similarityScore = updatedEvent.similarityScore ?? similarityScores[index];
+          }
+
+          // Handle user-based collaborative filtering
+          if (recommendationTypes[index] === 'user_cf') {
+              updatedEvent.similarUsers = similarityScores[index];
+
+              // if (eventId === '86') {
+              //     console.log(`Incrementing similarUsers for eventId: ${eventId} -> ${updatedEvent.similarUsers}`);
+              // }
+          }
+
+          // Replace the old event with the updated one
+          acc[existingIndex] = updatedEvent;
+      } else {
+          // Add new event with initial similarity score and similarUsers count
+          acc.push({
+              ...event,
+              eventId, // Ensure consistent type
+              similarityScore: recommendationTypes[index] === 'content_based' ? similarityScores[index] : undefined,
+              similarUsers: recommendationTypes[index] === 'user_cf' ? 1 : 0,
+          });
+      }
+
+      return acc;
+    }, [])
+    .sort((a, b) => (b.similarityScore || 0) - (a.similarityScore || 0));
+  };
+
+  // useEffect(() => {
+  //   setPreprocessedEvents(preprocessEvents(recommendedEvents));
+  //   setCurrentCardIndex(0); // Reset current index
+  //   setDeckResetKey((prevKey) => prevKey + 1); // Force Swiper to refresh
+  // }, [recommendedEvents]);
+  
+
+  const [preprocessedEvents, setPreprocessedEvents] = useState([]);
+  const [deckResetKey, setDeckResetKey] = useState(0);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+
+  // Load data only once when component mounts
+  useEffect(() => {
+    setPreprocessedEvents(preprocessEvents(recommendedEvents));
+  }, [recommendedEvents]); // Re-run only if recommendedEvents changes
+
+  const handleSwiped = (cardIndex) => {
+    setCurrentCardIndex(cardIndex + 1); // Update the index when a card is swiped
+    console.log(`Swiped card at index: ${cardIndex}`);
+
+    if (cardIndex === preprocessedEvents.length - 1) {
+      console.log("Resetting deck...");
+      setCurrentCardIndex(0); 
+
+      // Reset event list and force Swiper to re-render
+      setPreprocessedEvents(preprocessEvents(recommendedEvents));
+      setDeckResetKey((prevKey) => prevKey + 1);
+    }
+  };
+
+  const renderCard = (event) => (
+    <TouchableHighlight
+      className="rounded-2xl"
+      onPress={() => router.push(`/event-info?eventId=${event.eventId}`)}
+      underlayColor="#fff"
+    >
+      <View
+        key={event.eventId}
+        className="rounded-2xl border-2 border-secondary shadow-lg p-4"
+        style={{
+          shadowColor: 'rgba(254, 204, 29, 0.8)',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          elevation: 5,
+          backgroundColor: 'rgba(254, 204, 29, 1)',
+          minHeight: 400, // Ensures all cards have at least this height
+        justifyContent: 'space-between', // Ensures content is evenly spaced
+        }}
+      >
+        <Text className="text-secondary text-xl font-psemibold text-center mb-8">
+          {event.eventName}
+        </Text>
+        
+        <Text className="text-gray-700 text-base font-pregular text-center mb-6" numberOfLines={5} ellipsizeMode="tail">
+          {event.eventAbout}
+        </Text>
+        
+        <View className="flex-row justify-between items-center mt-2 border-t-0 pt-2 border-gray-700">
+          <View className="items-center">
+            <Text className="font-psemibold text-secondary-100">
+              {new Date(event.startTime * 1000).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Kuala_Lumpur' })}
+            </Text>
+            <Text className="font-pmedium text-gray-700">
+              {new Date(event.startTime * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+            </Text>
+          </View>
+          
+          <Text className="font-psemibold text-secondary-100">
+            {new Date(event.startTime * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })}
+          </Text>
+        </View>
+        
+        <View className="mt-2 border-t-0 pt-2 border-black items-center">
+          {event.similarityScore !== undefined && (
+            <Text className="text-gray-700 text-base font-pbold">
+              Similarity Score: {event.similarityScore.toFixed(2)}
+            </Text>
+          )}
+          {event.similarUsers !== undefined && (
+            <Text className="text-gray-700 text-base font-pbold">
+              Similar Users: {event.similarUsers}
+            </Text>
+          )}
+        </View>
+      </View>
+    </TouchableHighlight>
+  );
+  
+  
+
+  const handleYup = (card) => {
+    console.log(`Yup for ${card.eventName}`);
+  };
+
+  const handleNope = (card) => {
+    console.log(`Nope for ${card.eventName}`);
+  };
+
   return (
     <>
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
@@ -295,32 +455,7 @@ const Home = () => {
           </View>
         </View>
 
-        {/* <View className="h-[25%] bg-secondary-100 m-3 rounded-lg p-2 relative overflow-hidden">
-          <View className="absolute top-[-80%] right-[25%] w-[200%] h-[210%] border-2 border-primary bg-secondary opacity-90 rounded-full" />
-          <Text className="text-start text-2xl text-primary font-pbold mx-2 mt-3" onPress={()=>router.push('/my-details')}>{user ? user.userName : 'guest'}</Text>
-          <View className="flex-row justify-start mt-4">
-            <View className="flex-col justify-start">
-              <View className="flex-col justify-start">
-                <Text className="text-center text-base text-primary font-psemibold mx-2" onPress={()=>router.push('/my-rsvps')}>{event?event.length: 0}</Text>
-                <Text className="text-center text-base text-primary font-psemibold mx-2">event</Text>
-              </View>
-              <View className="flex-col justify-start">
-                <Text className="text-center text-base text-primary font-psemibold mx-2" onPress={()=>router.push('/my-rsvps')}>{activeRsvp?activeRsvp.length: 0}</Text>
-                <Text className="text-center text-base text-primary font-psemibold mx-2">rsvp</Text>
-              </View>
-            </View>
-            <View className="flex-col justify-start">
-              <View className="flex-col justify-start">
-                <Text className="text-center text-base text-primary font-psemibold mx-2" onPress={()=>router.push('/my-subscriptions')}>{channel?channel.length: 0}</Text>
-                <Text className="text-center text-base text-primary font-psemibold mx-2">channel</Text>
-              </View>
-              <View className="flex-col justify-start">
-                <Text className="text-center text-base text-primary font-psemibold mx-2" onPress={()=>router.push('/my-subscriptions')}>{subscription?subscription.length: 0}</Text>
-                <Text className="text-center text-base text-primary font-psemibold mx-2">subscription</Text>
-              </View>
-            </View>
-          </View>
-        </View> */}
+        
 
         <View className="h-[5%] flex-row justify-between mx-3 mt-3 mb-2 items-start">
             <Text className="text-lg text-black font-pbold py-1">Recommended Events</Text>
@@ -329,110 +464,49 @@ const Home = () => {
             </TouchableOpacity>
         </View>
 
+        <View style={{ flex: 1 }}>
+          {preprocessedEvents.length > 0 && (
+            <Swiper
+              key={deckResetKey} // Forces re-render when deck is reset
+              cards={preprocessedEvents}
+              renderCard={(card, index) => {
+                const relativeIndex = index - currentCardIndex; // Dynamic index for shifting effect
+                return (
+                  <View
+                    style={{
+                      transform: relativeIndex > 0 ? [{ translateX: relativeIndex * 10 }] : [],
+                    }}
+                  >
+                    {renderCard(card)}
+                  </View>
+                );
+              }}
+              keyExtractor={(event) => event.eventId}
+              onSwiped={handleSwiped}
+              cardIndex={currentCardIndex} //Ensure Swiper starts from the last swiped card
+              backgroundColor={'#fff'}
+              cardVerticalMargin={20}
+              stackSize={3} // Number of cards in the stack
+              containerStyle={{
+                position: 'absolute',
+                top: height * 0.3, // Dynamically center based on screen height
+                left: width * 0.4, // Dynamically center based on screen width
+                transform: [{ translateX: -width * 0.4 }, { translateY: -height * 0.25 }], // Adjust dynamically
+                width: width * 0.8, // Make Swiper width responsive
+                height: height * 0.5, // Make Swiper height responsive
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            />
+          )}
+        </View>
+        
+
         { recommendedEvents.length <= 0 && (
-          <Image source={images.brokenRobot} className="w-[100%] h-[70%] mx-auto my-auto" />
+          <Image source={images.brokenRobot} className="w-[100%] h-[70%] mx-auto mb-[50%]" />
         )}
 
-        <ScrollView className="mx-3 space-y-5 mb-2">
-        { recommendedEvents.reduce((acc, event, index) => {
-          //print all evenid in acc, acc is an array of event
-          // console.log(acc.map(e => e.eventId));
-          const eventId = String(event.eventId);
-          // console.log('eventId:', eventId);
-
-          // Find the index instead of using `find`
-          const existingIndex = acc.findIndex(e => String(e.eventId) === eventId);
-
-          if (existingIndex !== -1) {
-            // console.log('eventId:', acc[existingIndex].eventId);
-              // Create a shallow copy of the existing event (to maintain immutability)
-              const updatedEvent = { ...acc[existingIndex] };
-
-              // Handle content-based recommendation similarity score
-              if (recommendationTypes[index] === 'content_based') {
-                  updatedEvent.similarityScore = updatedEvent.similarityScore ?? similarityScores[index];
-              }
-
-              // Handle user-based collaborative filtering
-              if (recommendationTypes[index] === 'user_cf') {
-                  updatedEvent.similarUsers = similarityScores[index];
-
-                  // if (eventId === '86') {
-                  //     console.log(`Incrementing similarUsers for eventId: ${eventId} -> ${updatedEvent.similarUsers}`);
-                  // }
-              }
-
-              // Replace the old event with the updated one
-              acc[existingIndex] = updatedEvent;
-          } else {
-              // Add new event with initial similarity score and similarUsers count
-              acc.push({
-                  ...event,
-                  eventId, // Ensure consistent type
-                  similarityScore: recommendationTypes[index] === 'content_based' ? similarityScores[index] : undefined,
-                  similarUsers: recommendationTypes[index] === 'user_cf' ? 1 : 0,
-              });
-          }
-
-          return acc;
-    }, [])
-    .sort((a, b) => (b.similarityScore || 0) - (a.similarityScore || 0))
-    .map((event, index) => (
-        <TouchableOpacity
-            key={index}
-            className="rounded-lg border border-primary shadow-lg"
-            style={{
-                shadowColor: 'rgba(254, 204, 29, 0)',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.25,
-                shadowRadius: 3.84,
-                elevation: 5,
-                backgroundColor: 'rgba(254, 204, 29, 0)',
-            }}
-            onPress={() => { router.push(`/event-info?eventId=${event.eventId}`) }}
-        >
-            <View className="flex-row rounded-lg"
-                style={{
-                    backgroundColor: 'rgba(254, 204, 29, 0.8)',
-                }}
-            >
-                {/* Date & Time Section (30%) */}
-                <View className="my-4 space-y-2 flex-[0.3] border-r border-black items-center justify-center">
-                    <Text className="font-psemibold text-base text-secondary">
-                        {new Date(event.startTime * 1000).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Kuala_Lumpur' })}
-                    </Text>
-                    <Text className="font-psemibold text-base text-secondary">
-                        {new Date(event.startTime * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                    </Text>
-                    <Text className="text-secondary text-sm font-pregular">
-                        {new Date(event.startTime * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })}
-                    </Text>
-                </View>
-
-                {/* Event Name & Location (70%) */}
-                <View className="ml-4 my-4 space-y-1 flex-[0.7]">
-                    <Text className="font-psemibold text-lg text-secondary text-center" numberOfLines={1} ellipsizeMode="tail">
-                        {event.eventName}
-                    </Text>
-                    {/* <Text className="text-secondary-100 text-sm mb-2">📍 {event.eventLocation.fullAddress}</Text> */}
-
-                    {/* Show similarity score and similar users only if applicable */}
-                    {event.similarityScore !== undefined && (
-                        <Text className="text-black text-sm font-pbold">
-                            Similarity Score: {event.similarityScore.toFixed(2)}
-                        </Text>
-                    )}
-                    {event.similarUsers !== undefined && (
-                        <Text className="text-black text-sm font-pbold">
-                            {event.similarUsers} similar user(s) in this event
-                        </Text>
-                    )}
-                </View>
-            </View>
-        </TouchableOpacity>
-    ))}
-
-        </ScrollView>
+        
 
       </SafeAreaView>
       </TouchableWithoutFeedback>
