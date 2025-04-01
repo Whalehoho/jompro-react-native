@@ -101,57 +101,80 @@ const LivenessVerification = () => {
 
 
     const handleDetectedFaces = Worklets.createRunOnJS(async (faces, frame) => { 
+
+        // No face detected, reset the action index and progress circle
         if (faces.length === 0) {
             setFaceDetected(null);
             setActionIndex(0);
             progressCircle.value = circumference;
             return;
         }
+
+        // Only process the first detected face
         const firstFace = faces[0];
+
+        // Get the center of the face and the center of the circle
         const faceCenterX = firstFace.bounds.x + firstFace.bounds.width / 2;
         const faceCenterY = firstFace.bounds.y + firstFace.bounds.height / 2;
     
+        // Get the center of the circle and its radius
         const circleCenterX = width / 2;
         const circleCenterY = height / 4;
         const circleRadius = width * ratio;
     
+        // Calculate the distance from the face center to the circle center
         const distanceFromCenter = Math.sqrt(
             Math.pow(faceCenterX - circleCenterX, 2) +
             Math.pow(faceCenterY - circleCenterY, 2)
         );
     
+        // Check if the face is within the circle radius + 25
         if (distanceFromCenter <= circleRadius + 25) {
+
             setFaceDetected(firstFace);
     
+            // Liveness verification logic
             switch(actionToPerform[actionIndex]) {
                 case 'Blink':
+                    // Check if both eyes are closed
                     if(firstFace.leftEyeOpenProbability < 0.2 && firstFace.rightEyeOpenProbability < 0.2) {
+                        // Proceed to the next action
                         setActionIndex(actionIndex + 1);
                     }
                     break;
                 case 'Smile':
+                    // Check if the face is smiling
                     if(firstFace.smilingProbability > 0.8) {
+                        // Proceed to the next action
                         setActionIndex(actionIndex + 1);
                     }
                     break;
                 case 'Look Left':
+                    // Check if the face is looking left
                     if(firstFace.yawAngle > 20) {
+                        // Proceed to the next action
                         setActionIndex(actionIndex + 1);
                     }
                     break;
                 case 'Look Right':
+                    // Check if the face is looking right
                     if(firstFace.yawAngle < -20) {
+                        // Proceed to the next action
                         setActionIndex(actionIndex + 1);
                     }
                     break;
                 case 'Look Up':
+                    // Check if the face is looking up
                     if(firstFace.pitchAngle > 10) {
+                        // Proceed to the next action
                         setActionIndex(actionIndex + 1);
                     }
                     break;
                 case 'Look Down':
-                    if(firstFace.pitchAngle < -10 && !isCaptured) { // Check if capture has not been done
-                        setIsCaptured(true); // Set the state to true to prevent future calls
+                    // Check if the face is looking down
+                    if(firstFace.pitchAngle < -10 && !isCaptured) {
+                        setIsCaptured(true);
+                        // Capture the face image and crop it to compare with the user profile image
                         captureAndCropFace(firstFace.bounds);
                         setActionIndex(actionIndex + 1);
                         Alert.alert('Face biometric captured', 'Please wait while we verify your face, you can exit the screen now.');
@@ -233,9 +256,11 @@ const LivenessVerification = () => {
 
       const frameProcessor = useFrameProcessor((frame) => {
         'worklet'
+
+        // Detect faces in the frame， powered by react-native-vision-camera-face-detector
         const faces = detectFaces(frame)
-        // ... chain frame processors
-        // ... do something with frame
+        
+        // If face is detected, proceed with liveness verification
         handleDetectedFaces(faces)
       }, [handleDetectedFaces])
 

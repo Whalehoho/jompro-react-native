@@ -80,54 +80,64 @@ const Home = () => {
   );
 
   useFocusEffect(useCallback(() => {
+    // Check if user is logged in and selectedStates is not empty
     if (!user) return;
     if (selectedStates.length <= 0) return;
+
+    // Fetch recommended events based on user ID and selected states
     const fetchRecommendedEvents = async () => {
+
+      // Set request data
       const data = {
         user_id: user.userId,
         top_n: 15,
         states: selectedStates,
       };
+
+      // Fetch recommended events from the backend via API
       const response = await api.event.getRecommendedEvents(data);
+
+      // Get recommended event IDs and similarity scores
       const recommendedEventIdsAndSimilarityScores = response.data;
-      // console.log('recommendedEventIdsAndSimilarityScores:', recommendedEventIdsAndSimilarityScores);
-      // recommendedEventIdsAndSimilarityScores: {"content_based": [["85", 0.7123641530615953], ["81", 0.4485347611419461], ["82", 0.37638632635454045], ["84", 0.36952156194051206], ["83", 0.36231772144642793], ["88", 0.3094747936219101], ["87", 0.263415555922654]], "user_cf": [["83", 2], ["86", 1]]}
-      // use recommendedEvents to store the event data, including id, score, and type.
+
       // Extract recommended event IDs
       const recommendedEventIds = Object.values(recommendedEventIdsAndSimilarityScores)
         .flat()
         .map(item => item[0]);
-      // console.log('recommendedEventIds', recommendedEventIds);
+
       // Extract similarity scores
       const similarityScores = Object.values(recommendedEventIdsAndSimilarityScores)
         .flat()
         .map(item => item[1]);
+
+      // Set similarity scores
       setSimilarityScores(similarityScores);
-      // console.log('similarityScores:', similarityScores);
 
       // Flatten and track types
       const recommendationTypes = Object.entries(recommendedEventIdsAndSimilarityScores)
       .flatMap(([type, events]) => events.map(() => type));
 
+      // Set recommendation types
       setRecommendationTypes(recommendationTypes);
-      // console.log('recommendationTypes:', recommendationTypes);
-
     
-
+      // Fetch recommended events from the backend using the recommended event IDs
       const recommendedEvents = await Promise.all(
         recommendedEventIds.map(async (eventId, index) => {
           const response = await api.event.getEvent(eventId);
           if(!response || !response.data) {
-            // remove the similarity score if the event is not found based on current index
             setSimilarityScores((prev) => prev.filter((item, i) => i !== index));
             setRecommendationTypes((prev) => prev.filter((item, i) => i !== index));
           }
           return response.data;
         })
       );
+
+      // Set recommended events
       setRecommendedEvents(recommendedEvents);
     };
+
     fetchRecommendedEvents();
+    
   }, [user, selectedStates]));
 
 

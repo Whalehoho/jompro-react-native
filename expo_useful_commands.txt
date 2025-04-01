@@ -27,7 +27,6 @@ Step of Release
 ===============
 
 keytool -genkeypair -v -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -keystore jompro-release-key.jks -alias jompro-release-key
-pwd: jompro
 
 cd android
 ./gradlew assembleRelease

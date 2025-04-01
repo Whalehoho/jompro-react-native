@@ -88,10 +88,11 @@ const Chatroom = () => {
 
     // Listen for previous chat history
     socket.on('chatHistory', async (history) => {
-      // console.log('Chat history:', history);
 
-      const fetchedSenderIds = new Set();  // Track senderIds we've already processed
+      // Track senderIds that are already processed to avoid duplicate API calls
+      const fetchedSenderIds = new Set();  
 
+      // Get sender profile images for each message in the history
       for (let message of history) {
         const { senderId } = message;
 
@@ -104,12 +105,13 @@ const Chatroom = () => {
             ...prev,
             [senderId]: url.data,
           }));
-          fetchedSenderIds.add(senderId);  // Mark senderId as processed
+          // Mark senderId as processed
+          fetchedSenderIds.add(senderId);  
         }
       }
 
-
       setMessages(history);
+
     });
 
     // Listen for new messages
@@ -123,6 +125,7 @@ const Chatroom = () => {
       }
 
       setMessages((prev) => [...prev, message]);
+      
     });
 
     // Cleanup listeners when unmounting

@@ -239,25 +239,29 @@ const Discover = ({ navigation }) => {
     setSelectedLocation(null);
   };
 
-
+  // Memoized EventMarker component to avoid unnecessary re-renders
   const EventMarker = React.memo(({ event, index, selectedEventCard, scrollToEvent }) => {
+
+    // Skip rendering this event marker if it matches the selected location to avoid overlap
     if (selectedEventCard === event.eventId) {
-      return null; // Skip rendering this event marker if it matches the selected location
+      return null; 
     }
 
-    // console.log('Rendering event marker:', event.eventId);
-  
+    // Get the event's coordinates
     const eventLat = event.eventLocation.lat;
     const eventLng = event.eventLocation.lng;
   
+    // Create a small offset for each marker to avoid overlap
     const offsetLat = eventLat + index * 0.00005;
     const offsetLng = eventLng + index * 0.00005;
   
+    // Memoize the coordinate object to avoid unnecessary re-renders
     const coordinate = useMemo(() => ({
       latitude: offsetLat,
       longitude: offsetLng,
     }), [offsetLat, offsetLng]);
   
+    // When the marker is pressed, the horizontal event list scrolls to the corresponding event card
     const handlePress = useCallback(() => {
       scrollToEvent(event.eventId);
 
@@ -267,6 +271,7 @@ const Discover = ({ navigation }) => {
     }, [event.eventId, scrollToEvent]);
   
     return (
+      // Use custom marker instead of default pin
       <Marker
         key={event.eventId}
         coordinate={coordinate}
@@ -279,6 +284,7 @@ const Discover = ({ navigation }) => {
     );
   }, (prevProps, nextProps) => {
     return (
+      // The event marker should only re-render if the event, index, or selectedEventCard changes
       prevProps.event === nextProps.event &&
       prevProps.index === nextProps.index &&
       prevProps.selectedEventCard === nextProps.selectedEventCard
