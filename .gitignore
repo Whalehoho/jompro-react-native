@@ -36,3 +36,4 @@ yarn-error.*
 
 # Custom ignored files
 .env
+replacements.txt
